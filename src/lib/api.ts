@@ -59,6 +59,12 @@ export const publicApi = {
   shokSandeshDetail: (id: number) => api.get(`/shok-sandesh/${id}`),
   shokSandeshPackages: () => api.get("/shok-sandesh/packages"),
 
+  // E-Paper
+  epaperIssues: (params?: Record<string, any>) => api.get("/epaper", { params }),
+  epaperLatest: () => api.get("/epaper/latest"),
+  epaperIssue: (id: number) => api.get(`/epaper/${id}`),
+  epaperAdjacent: (id: number) => api.get(`/epaper/${id}/adjacent`),
+
   // Site
   siteResolve: () => api.get("/sites/resolve"),
 };

@@ -29,10 +29,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   'google_translate_element'
                 );
               }
+              function hideGoogBanner() {
+                var b = document.querySelector('.goog-te-banner-frame');
+                if (b) b.style.cssText = 'display:none!important';
+                if (document.body) document.body.style.removeProperty('top');
+              }
+              // Load Google Translate AFTER page fully loads to avoid React hydration conflicts
+              window.addEventListener('load', function() {
+                var s = document.createElement('script');
+                s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+                s.async = true;
+                document.head.appendChild(s);
+                // Poll to hide the banner Google injects after translating
+                setInterval(hideGoogBanner, 500);
+              });
             `,
           }}
         />
-        <script async src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" />
       </head>
       <body className="font-sans min-h-screen flex flex-col bg-gray-50">
         <AuthProvider>

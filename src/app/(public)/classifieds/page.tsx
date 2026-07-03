@@ -61,10 +61,15 @@ export default function ClassifiedsPage() {
         ))}
       </div>
 
-      <div className="relative max-w-md mb-6">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && loadAds()}
-          placeholder={isHindi ? "विज्ञापन खोजें..." : "Search classifieds..."} className="w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm" />
+      <div className="flex gap-2 max-w-md mb-6">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && loadAds()}
+            placeholder={isHindi ? "विज्ञापन खोजें..." : "Search classifieds..."} className="w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm" />
+        </div>
+        <button onClick={loadAds} className="px-4 py-2.5 bg-brand text-white rounded-xl text-sm hover:opacity-90 transition">
+          {isHindi ? "खोजें" : "Search"}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

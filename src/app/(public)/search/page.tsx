@@ -18,7 +18,24 @@ function SearchContent() {
     if (q.length >= 2) {
       setLoading(true);
       publicApi.search(q)
-        .then((r) => setArticles(r.data.items))
+        .then((r) => {
+          // Search API returns snake_case; normalize to camelCase for NewsCard
+          const normalized = (r.data.items || []).map((a: any) => ({
+            id: a.id,
+            title: a.title,
+            titleHindi: a.title_hindi,
+            slug: a.slug,
+            summary: a.summary,
+            thumbnailUrl: a.thumbnail_url,
+            publishedAt: a.published_at,
+            isBreaking: a.is_breaking,
+            contentType: a.content_type,
+            categoryName: a.category_name,
+            categorySlug: a.category_slug,
+            categoryColor: a.category_color,
+          }));
+          setArticles(normalized);
+        })
         .catch(() => setArticles([]))
         .finally(() => setLoading(false));
     } else {

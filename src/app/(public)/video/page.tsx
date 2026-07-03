@@ -7,7 +7,7 @@ import { NewsCard } from "@/components/NewsCard";
 export default function VideoPage() {
   const [videos, setVideos] = useState<any[]>([]);
 
-  useEffect(() => { publicApi.articles({ contentType: "video", limit: 20 }).then((r) => setVideos(r.data.items)); }, []);
+  useEffect(() => { publicApi.articles({ contentType: "video", limit: 20 }).then((r) => setVideos(r.data.items)).catch(() => {}); }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">

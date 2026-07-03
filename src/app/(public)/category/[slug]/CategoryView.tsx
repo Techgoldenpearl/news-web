@@ -59,7 +59,7 @@ export default function CategoryView() {
       {category && (
         <div className="mb-2 pb-3 border-b-2" style={{ borderColor: category.color || "var(--accent)" }}>
           <h1 className="text-3xl font-bold" style={{ color: category.color }}>
-            {category.nameHindi || category.name}
+            {isHindi ? (category.nameHindi || category.name) : category.name}
           </h1>
           {category.description && <p className="text-gray-500 mt-1">{category.description}</p>}
         </div>

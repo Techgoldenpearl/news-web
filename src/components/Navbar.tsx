@@ -1,12 +1,55 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { publicApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useSite } from "@/lib/site-context";
 import { Search, Menu, X, User, Bookmark, LogOut, Globe, Clock, Languages } from "lucide-react";
+
+const TRANSLATE_LANGS = [
+  { code: "hi", label: "हिंदी" },
+  { code: "en", label: "English" },
+  { code: "bn", label: "বাংলা" },
+  { code: "ta", label: "தமிழ்" },
+  { code: "te", label: "తెలుగు" },
+  { code: "mr", label: "मराठी" },
+  { code: "gu", label: "ગુજરાતી" },
+  { code: "kn", label: "ಕನ್ನಡ" },
+  { code: "ml", label: "മലയാളം" },
+  { code: "pa", label: "ਪੰਜਾਬੀ" },
+  { code: "ur", label: "اردو" },
+];
+
+function setGoogTransCookie(value: string) {
+  // Set without explicit domain first (works for localhost and subdomains)
+  document.cookie = `googtrans=${value}; path=/`;
+  // Also set with domain for production (may be ignored on localhost, that's fine)
+  const host = location.hostname;
+  if (host !== 'localhost' && host !== '127.0.0.1') {
+    document.cookie = `googtrans=${value}; path=/; domain=${host}`;
+  }
+}
+
+function clearGoogTransCookie() {
+  const exp = 'expires=Thu, 01 Jan 1970 00:00:00 UTC';
+  document.cookie = `googtrans=; ${exp}; path=/`;
+  const host = location.hostname;
+  if (host !== 'localhost' && host !== '127.0.0.1') {
+    document.cookie = `googtrans=; ${exp}; path=/; domain=${host}`;
+  }
+}
+
+function triggerGoogleTranslate(langCode: string, srcLang: string) {
+  if (langCode === srcLang) {
+    clearGoogTransCookie();
+  } else {
+    setGoogTransCookie(`/${srcLang}/${langCode}`);
+  }
+  window.location.reload();
+}
 
 export function Navbar() {
   const { user, logout } = useAuth();
@@ -17,6 +60,23 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [siteMenuOpen, setSiteMenuOpen] = useState(false);
+  const [translateOpen, setTranslateOpen] = useState(false);
+  const [translatePos, setTranslatePos] = useState({ top: 0, right: 0 });
+  const [activeLang, setActiveLang] = useState<string>('hi');
+  const translateBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Source language of the current site (hi for Hindi sites, en for English sites)
+  const srcLang = site?.language || 'hi';
+
+  useEffect(() => {
+    // Read active translated language from googtrans cookie
+    const match = document.cookie.match(/googtrans=\/\w+\/(\w+)/);
+    if (match && match[1]) {
+      setActiveLang(match[1]);
+    } else {
+      setActiveLang(srcLang);
+    }
+  }, [srcLang]);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -33,6 +93,9 @@ export function Navbar() {
 
   return (
     <>
+      {/* Hidden Google Translate widget — suppressHydrationWarning because Google injects content into it */}
+      <div id="google_translate_element" suppressHydrationWarning />
+
       {/* Top utility bar */}
       <div className="news-topbar hidden md:block">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
@@ -42,6 +105,9 @@ export function Navbar() {
             <Link href="/rashifal" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "राशिफल" : "Horoscope"}</Link>
             <Link href="/web-stories" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "वेब स्टोरीज़" : "Web Stories"}</Link>
             <Link href="/photo-gallery" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "फोटो गैलरी" : "Gallery"}</Link>
+            <Link href="/epaper" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "ई-पेपर" : "E-Paper"}</Link>
+            <Link href="/shok-sandesh" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "शोक संदेश" : "Obituaries"}</Link>
+            <Link href="/classifieds" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "वर्गीकृत विज्ञापन" : "Classifieds"}</Link>
             <Link href="/patrakar/login" className="bg-brand-tint text-brand hover:opacity-80 transition text-xs font-bold px-2 py-0.5 rounded">
               📰 {isHindi ? "पत्रकार पोर्टल" : "Journalist Portal"}
             </Link>
@@ -49,20 +115,45 @@ export function Navbar() {
               📣 {isHindi ? "विज्ञापन दें" : "Advertise"}
             </Link>
 
-            {/* Hidden Google Translate widget */}
-            <div id="google_translate_element" />
-
-            {/* Translate trigger button */}
-            <button
-              onClick={() => {
-                const sel = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
-                if (sel) { sel.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
-              }}
-              className="flex items-center gap-1 text-white/70 hover:text-brand transition text-xs font-medium"
-              title="Translate page"
-            >
-              <Languages size={13} /> Translate
-            </button>
+            {/* Translate dropdown */}
+            <div className="relative">
+              <button
+                ref={translateBtnRef}
+                onClick={() => {
+                  if (!translateOpen && translateBtnRef.current) {
+                    const rect = translateBtnRef.current.getBoundingClientRect();
+                    setTranslatePos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+                  }
+                  setTranslateOpen(!translateOpen);
+                }}
+                className="flex items-center gap-1 text-white/70 hover:text-brand transition text-xs font-medium"
+                title="Translate page"
+              >
+                <Languages size={13} />
+                {TRANSLATE_LANGS.find(l => l.code === activeLang)?.label || 'Translate'}
+              </button>
+              {translateOpen && (
+                <>
+                  <div className="fixed inset-0 z-[65]" onClick={() => setTranslateOpen(false)} />
+                  <div
+                    className="fixed w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-[70] py-1 max-h-72 overflow-y-auto"
+                    style={{ top: translatePos.top, right: translatePos.right }}
+                  >
+                    <p className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide border-b border-gray-100 mb-1">Translate To</p>
+                    {TRANSLATE_LANGS.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => { triggerGoogleTranslate(lang.code, srcLang); setActiveLang(lang.code); setTranslateOpen(false); }}
+                        className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${activeLang === lang.code ? 'bg-orange-50 text-brand font-semibold' : 'text-gray-700 hover:bg-orange-50 hover:text-brand'}`}
+                      >
+                        {lang.label}
+                        {activeLang === lang.code && <span className="text-brand text-xs">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
             <div className="relative">
               <button onClick={() => setSiteMenuOpen(!siteMenuOpen)} className="flex items-center gap-1 text-white/70 hover:text-brand transition text-xs font-medium">
@@ -106,7 +197,13 @@ export function Navbar() {
               <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg">
                 {menuOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
-              <Link href="/home" className="text-xl md:text-2xl font-black tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-brand/40 rounded-md px-0.5" style={{ color: siteColor }}>{siteName}</Link>
+              <Link href="/home" className="flex items-center outline-none focus-visible:ring-2 focus-visible:ring-brand/40 rounded-md px-0.5">
+                {site?.logoUrl ? (
+                  <Image src={site.logoUrl} alt={siteName} width={160} height={40} className="h-8 md:h-10 w-auto object-contain" priority />
+                ) : (
+                  <span className="text-xl md:text-2xl font-black tracking-tight" style={{ color: siteColor }}>{siteName}</span>
+                )}
+              </Link>
             </div>
 
             <div className="flex items-center gap-1">
@@ -171,6 +268,7 @@ export function Navbar() {
                   {isHindi ? (c.nameHindi || c.name) : c.name}
                 </Link>
               ))}
+              <Link href="/epaper" className={pathname === "/epaper" ? "active" : ""}>{isHindi ? "ई-पेपर" : "E-Paper"}</Link>
             </div>
           </div>
         </div>
@@ -196,7 +294,10 @@ export function Navbar() {
                 <Link href="/rashifal" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">🔮 {isHindi ? "राशिफल" : "Horoscope"}</Link>
                 <Link href="/web-stories" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">📱 {isHindi ? "वेब स्टोरीज़" : "Web Stories"}</Link>
                 <Link href="/photo-gallery" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">📷 {isHindi ? "फोटो गैलरी" : "Photo Gallery"}</Link>
+                <Link href="/epaper" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">📰 {isHindi ? "ई-पेपर" : "E-Paper"}</Link>
                 <Link href="/video" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">🎥 {isHindi ? "वीडियो" : "Video"}</Link>
+                <Link href="/shok-sandesh" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">🕯️ {isHindi ? "शोक संदेश" : "Obituaries"}</Link>
+                <Link href="/classifieds" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">📋 {isHindi ? "वर्गीकृत विज्ञापन" : "Classifieds"}</Link>
                 <Link href="/patrakar/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">📰 {isHindi ? "पत्रकार पोर्टल" : "Journalist Portal"}</Link>
                 <Link href="/advertiser/login" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">📣 {isHindi ? "विज्ञापन दें" : "Advertise"}</Link>
               </div>

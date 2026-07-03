@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { publicApi } from "@/lib/api";
 
 const RASHI_LIST = [
@@ -12,13 +13,22 @@ const RASHI_LIST = [
   { slug: "kumbh", name: "कुंभ", symbol: "♒" }, { slug: "meen", name: "मीन", symbol: "♓" },
 ];
 
-export default function RashifalPage() {
+function RashifalContent() {
+  const searchParams = useSearchParams();
   const [selected, setSelected] = useState<string | null>(null);
   const [data, setData] = useState<any>(null);
 
+  // Auto-select from URL param (e.g. /rashifal?rashi=mesh)
+  useEffect(() => {
+    const param = searchParams.get("rashi");
+    if (param && RASHI_LIST.some((r) => r.slug === param)) {
+      setSelected(param);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (selected) {
-      publicApi.rashifal(selected).then((r) => setData(r.data));
+      publicApi.rashifal(selected).then((r) => setData(r.data)).catch(() => {});
     }
   }, [selected]);
 
@@ -46,13 +56,20 @@ export default function RashifalPage() {
           </h2>
           <p className="text-gray-700 leading-relaxed mb-4">{data.contentHindi || data.content}</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-            <div className="bg-gray-50 p-3 rounded-lg text-center"><p className="text-sm text-gray-500">Lucky Number</p><p className="font-bold">{data.luckyNumber}</p></div>
-            <div className="bg-gray-50 p-3 rounded-lg text-center"><p className="text-sm text-gray-500">Lucky Color</p><p className="font-bold">{data.luckyColor}</p></div>
-            <div className="bg-gray-50 p-3 rounded-lg text-center"><p className="text-sm text-gray-500">Score</p><p className="font-bold">{data.score}/10</p></div>
-            <div className="bg-gray-50 p-3 rounded-lg text-center"><p className="text-sm text-gray-500">Love</p><p className="font-bold">{data.loveScore}/10</p></div>
+            <div className="bg-gray-50 p-3 rounded-lg text-center"><p className="text-sm text-gray-500">Lucky Number</p><p className="font-bold">{data.luckyNumber ?? "—"}</p></div>
+            <div className="bg-gray-50 p-3 rounded-lg text-center"><p className="text-sm text-gray-500">Lucky Color</p><p className="font-bold">{data.luckyColor ?? "—"}</p></div>
+            <div className="bg-gray-50 p-3 rounded-lg text-center"><p className="text-sm text-gray-500">Score</p><p className="font-bold">{data.score != null ? `${data.score}/10` : "—"}</p></div>
+            <div className="bg-gray-50 p-3 rounded-lg text-center"><p className="text-sm text-gray-500">Love</p><p className="font-bold">{data.loveScore != null ? `${data.loveScore}/10` : "—"}</p></div>
           </div>
         </div>
       )}
+      {!data && !selected && (
+        <p className="text-center text-gray-400 py-8">अपनी राशि चुनें / Select your zodiac sign</p>
+      )}
     </div>
   );
+}
+
+export default function RashifalPage() {
+  return <Suspense><RashifalContent /></Suspense>;
 }

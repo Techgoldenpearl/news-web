@@ -37,6 +37,8 @@ body {
   font-size: 0.74rem;
   padding: 0.4rem 0;
   border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  z-index: 60;
 }
 
 /* ── Main header — white, thin saffron accent line ── */
@@ -139,9 +141,27 @@ body {
 .scrollbar-thin::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
 
-/* Hide Google Translate widget UI but keep it functional */
-#google_translate_element { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; overflow: hidden; }
-body > .skiptranslate { display: none !important; }
+/* Google Translate — hide all visible chrome, keep translate engine working */
+#google_translate_element {
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  width: 200px;
+  height: 40px;
+  overflow: hidden;
+  z-index: -1;
+}
+/* "Translated into: Hindi | Show original" banner iframe — hide it */
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame { display: none !important; }
+/* DO NOT hide body > .skiptranslate — Google wraps ALL page content in it when translating */
+/* Stop Google pushing body down by 40px when banner shows */
 body { top: 0 !important; }
-.goog-te-banner-frame { display: none !important; }
+/* Floating "G" badge and tooltip balloon */
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.goog-te-balloon-frame,
+[id^="goog-gt-tt"] { display: none !important; }
+/* Widget UI inside the hidden container */
+.goog-te-gadget-simple,
+.goog-te-gadget > span { display: none !important; }
 

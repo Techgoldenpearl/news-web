@@ -12,6 +12,7 @@ interface Site {
   tagline?: string;
   primaryColor?: string;
   logoUrl?: string;
+  theme?: { primaryColor?: string; secondaryColor?: string; headerBg?: string };
 }
 
 interface SiteContextType {
@@ -62,8 +63,21 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Normalize primaryColor: may be a top-level field or inside theme object
+  const normalizedSite = site
+    ? { ...site, primaryColor: site.primaryColor || site.theme?.primaryColor }
+    : null;
+
+  // Keep <html lang> in sync with the active site language so Google Translate
+  // picks up the correct pageLanguage on init
+  useEffect(() => {
+    if (normalizedSite?.language) {
+      document.documentElement.lang = normalizedSite.language;
+    }
+  }, [normalizedSite?.language]);
+
   return (
-    <SiteContext.Provider value={{ site, sites, switchSite, isHindi: site?.language === "hi", loading }}>
+    <SiteContext.Provider value={{ site: normalizedSite, sites, switchSite, isHindi: normalizedSite?.language === "hi", loading }}>
       {children}
     </SiteContext.Provider>
   );

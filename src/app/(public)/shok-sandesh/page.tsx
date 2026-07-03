@@ -53,16 +53,21 @@ export default function ShokSandeshPage() {
       <div className="flex gap-2 mb-6 flex-wrap justify-center">
         {TYPES.map((t) => (
           <button key={t.value} onClick={() => { setType(t.value); setPage(1); }}
-            className={`px-4 py-2 rounded-full text-sm transition ${type === t.value ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+            className={`px-4 py-2 rounded-full text-sm transition ${type === t.value ? "bg-brand text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
             {isHindi ? t.labelHi : t.label}
           </button>
         ))}
       </div>
 
-      <div className="relative max-w-md mx-auto mb-8">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && loadItems()}
-          placeholder={isHindi ? "नाम से खोजें..." : "Search by name..."} className="w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm" />
+      <div className="flex gap-2 max-w-md mx-auto mb-8">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && loadItems()}
+            placeholder={isHindi ? "नाम से खोजें..." : "Search by name..."} className="w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm" />
+        </div>
+        <button onClick={loadItems} className="px-4 py-2.5 bg-brand text-white rounded-xl text-sm hover:opacity-90 transition">
+          {isHindi ? "खोजें" : "Search"}
+        </button>
       </div>
 
       <div className="space-y-4">
