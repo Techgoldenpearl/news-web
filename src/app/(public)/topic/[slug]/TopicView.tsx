@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { publicApi, customerApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useSite } from "@/lib/site-context";
 import { NewsCard } from "@/components/NewsCard";
+import { AdSlot } from "@/components/AdSlot";
 import { Hash, Users } from "lucide-react";
 import { toast } from "sonner";
 
@@ -51,10 +52,28 @@ export default function TopicView() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data.articles.map((a: any) => <NewsCard key={a.id} {...a} />)}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.articles.map((a: any, i: number) => (
+              <Fragment key={a.id}>
+                <NewsCard {...a} />
+                {(i + 1) % 6 === 0 && (
+                  <div className="md:col-span-2">
+                    <AdSlot zone="category-top" className="w-full max-w-full" />
+                  </div>
+                )}
+              </Fragment>
+            ))}
+          </div>
+          {data.articles.length === 0 && <p className="text-center text-gray-400 py-12">{isHindi ? "इस टॉपिक में कोई लेख नहीं" : "No articles in this topic"}</p>}
+        </div>
+
+        <aside className="space-y-4">
+          <AdSlot zone="sidebar-top" className="w-full" />
+          <AdSlot zone="sidebar-middle" className="w-full" />
+        </aside>
       </div>
-      {data.articles.length === 0 && <p className="text-center text-gray-400 py-12">{isHindi ? "इस टॉपिक में कोई लेख नहीं" : "No articles in this topic"}</p>}
     </div>
   );
 }

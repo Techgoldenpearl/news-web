@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import { NewsCard } from "@/components/NewsCard";
+import { AdSlot } from "@/components/AdSlot";
 import { MapPin } from "lucide-react";
 
 export default function StateView() {
@@ -38,21 +39,34 @@ export default function StateView() {
             <MapPin size={26} className="text-brand" /> {data.state.nameHindi || data.state.name}
           </h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.articles.map((a: any) => <NewsCard key={a.id} {...a} />)}
+            {data.articles.map((a: any, i: number) => (
+              <Fragment key={a.id}>
+                <NewsCard {...a} />
+                {(i + 1) % 6 === 0 && (
+                  <div className="md:col-span-2">
+                    <AdSlot zone="category-top" className="w-full max-w-full" />
+                  </div>
+                )}
+              </Fragment>
+            ))}
           </div>
           {data.articles.length === 0 && <p className="text-center text-gray-500 py-12">{isHindi ? "इस राज्य के लिए कोई लेख नहीं" : "No articles for this state"}</p>}
         </div>
 
-        <aside className="bg-white rounded-xl border p-4 h-fit">
-          <h3 className="font-bold text-sm uppercase tracking-wide text-gray-500 mb-3">{isHindi ? "अन्य राज्य" : "Other States"}</h3>
-          <div className="space-y-0.5">
-            {states.map((s) => (
-              <Link key={s.id} href={`/state/${s.slug}`}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium transition ${s.slug === slug ? "bg-brand-tint text-brand" : "text-gray-700 hover:bg-gray-50"}`}>
-                {isHindi ? (s.nameHindi || s.name) : s.name}
-              </Link>
-            ))}
+        <aside className="space-y-4">
+          <AdSlot zone="sidebar-top" className="w-full" />
+          <div className="bg-white rounded-xl border p-4 h-fit">
+            <h3 className="font-bold text-sm uppercase tracking-wide text-gray-500 mb-3">{isHindi ? "अन्य राज्य" : "Other States"}</h3>
+            <div className="space-y-0.5">
+              {states.map((s) => (
+                <Link key={s.id} href={`/state/${s.slug}`}
+                  className={`block px-3 py-2 rounded-lg text-sm font-medium transition ${s.slug === slug ? "bg-brand-tint text-brand" : "text-gray-700 hover:bg-gray-50"}`}>
+                  {isHindi ? (s.nameHindi || s.name) : s.name}
+                </Link>
+              ))}
+            </div>
           </div>
+          <AdSlot zone="sidebar-middle" className="w-full" />
         </aside>
       </div>
     </div>

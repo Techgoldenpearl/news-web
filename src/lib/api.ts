@@ -64,6 +64,11 @@ export const publicApi = {
   epaperLatest: () => api.get("/epaper/latest"),
   epaperIssue: (id: number) => api.get(`/epaper/${id}`),
   epaperAdjacent: (id: number) => api.get(`/epaper/${id}/adjacent`),
+  epaperByDate: (date: string, edition?: string) => api.get("/epaper/by-date", { params: { date, edition } }),
+  epaperCalendar: (month: string, edition?: string) => api.get("/epaper/calendar", { params: { month, edition } }),
+  epaperEditionsForDate: (date?: string) => api.get("/epaper/editions-for-date", { params: date ? { date } : undefined }),
+  epaperClipUrl: (issueId: number, pageId: number, rect: { x: number; y: number; width: number; height: number }) =>
+    `${API_BASE}/api/epaper/${issueId}/pages/${pageId}/clip?x=${rect.x}&y=${rect.y}&width=${rect.width}&height=${rect.height}`,
 
   // Site
   siteResolve: () => api.get("/sites/resolve"),
