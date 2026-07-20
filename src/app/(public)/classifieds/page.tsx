@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
-import { Search, MapPin, Phone, MessageCircle, AlertTriangle, Star, Zap } from "lucide-react";
+import { Search, MapPin, Phone, MessageCircle, AlertTriangle, Star, Zap, Plus } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { hi, enIN } from "date-fns/locale";
@@ -50,7 +50,12 @@ export default function ClassifiedsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">{isHindi ? "वर्गीकृत विज्ञापन" : "Classifieds"}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">{isHindi ? "वर्गीकृत विज्ञापन" : "Classifieds"}</h1>
+        <Link href="/classifieds/post" className="flex items-center gap-1.5 bg-brand text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
+          <Plus size={16} /> {isHindi ? "विज्ञापन पोस्ट करें" : "Post an Ad"}
+        </Link>
+      </div>
 
       <div className="flex gap-3 mb-6 flex-wrap">
         {CATEGORIES.map((c) => (

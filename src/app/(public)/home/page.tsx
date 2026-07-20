@@ -6,6 +6,7 @@ import { useSite } from "@/lib/site-context";
 import { NewsCard } from "@/components/NewsCard";
 import { CompactNewsCard } from "@/components/CompactNewsCard";
 import { CategoryBlock } from "@/components/CategoryBlock";
+import { LocalNewsBlock } from "@/components/LocalNewsBlock";
 import { ScrollCarousel } from "@/components/ScrollCarousel";
 import { RashifalStrip } from "@/components/RashifalStrip";
 import Link from "next/link";
@@ -94,6 +95,9 @@ export default function HomePage() {
       </section>
 
       <SidebarAd position="top" className="bg-white rounded-xl border p-3" />
+
+      {/* LOCAL NEWS — based on detected/selected city */}
+      <LocalNewsBlock />
 
       {/* CATEGORY BLOCKS — stacked Bhaskar-style sections */}
       {categories.map((c, i) => (

@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
-import { Search, MapPin, Calendar, Share2, Heart } from "lucide-react";
+import { Search, MapPin, Calendar, Share2, Heart, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { hi, enIN } from "date-fns/locale";
+import Link from "next/link";
 
 const TYPES = [
   { value: "", label: "All", labelHi: "सभी" },
@@ -48,6 +49,9 @@ export default function ShokSandeshPage() {
         <Heart size={32} className="text-gray-400 mx-auto mb-2" />
         <h1 className="text-2xl font-bold">{isHindi ? "शोक संदेश / श्रद्धांजलि" : "Obituaries & Tributes"}</h1>
         <p className="text-gray-500 mt-1 text-sm">{isHindi ? "अपनों को श्रद्धांजलि अर्पित करें" : "Pay tribute to your loved ones"}</p>
+        <Link href="/shok-sandesh/post" className="inline-flex items-center gap-1.5 bg-brand text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition mt-4">
+          <Plus size={16} /> {isHindi ? "शोक संदेश जमा करें" : "Submit an Obituary"}
+        </Link>
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap justify-center">

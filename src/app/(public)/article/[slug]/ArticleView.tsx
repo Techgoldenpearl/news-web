@@ -8,6 +8,7 @@ import { useSite } from "@/lib/site-context";
 import { ShareButtons } from "@/components/ShareButtons";
 import { CommentSection } from "@/components/CommentSection";
 import { RelatedArticles } from "@/components/RelatedArticles";
+import { LiveBlogTimeline } from "@/components/LiveBlogTimeline";
 import { format } from "date-fns";
 import { Clock, Eye, Bookmark, BookmarkCheck, Lock } from "lucide-react";
 import Link from "next/link";
@@ -29,6 +30,8 @@ export default function ArticleView() {
 
   useEffect(() => {
     if (slug) {
+      setLoading(true);
+      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
       publicApi.article(slug as string)
         .then((r) => setArticle(r.data))
         .catch(() => {})
@@ -112,6 +115,8 @@ export default function ArticleView() {
       )}
 
       <InArticleAd position={1} />
+
+      {article.id && <LiveBlogTimeline articleId={article.id} />}
 
       {article.isPremiumLocked ? (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center my-8">

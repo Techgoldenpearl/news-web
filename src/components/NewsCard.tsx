@@ -31,9 +31,9 @@ export function NewsCard({ title, titleHindi, slug, summary, summaryHindi, thumb
   const displayCategory = isHindi ? (categoryNameHindi || categoryName) : categoryName;
 
   return (
-    <Link href={`/article/${slug}`} className="group block">
-      <div className={`bg-white rounded-lg overflow-hidden shadow-sm border hover:shadow-md transition`}>
-        <div className={`relative overflow-hidden bg-gray-100 ${size === "lg" ? "aspect-[16/9]" : size === "sm" ? "aspect-[4/3]" : "aspect-[3/2]"}`}>
+    <Link href={`/article/${slug}`} className="group block h-full">
+      <div className="bg-white rounded-lg overflow-hidden shadow-sm border hover:shadow-md transition h-full flex flex-col">
+        <div className={`relative overflow-hidden bg-gray-100 shrink-0 ${size === "lg" ? "aspect-[16/9]" : size === "sm" ? "aspect-[4/3]" : "aspect-[3/2]"}`}>
           {thumbnailUrl ? (
             <img src={thumbnailUrl} alt={displayTitle}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -61,15 +61,15 @@ export function NewsCard({ title, titleHindi, slug, summary, summaryHindi, thumb
             </span>
           )}
         </div>
-        <div className="p-3">
-          <h3 className={`font-semibold text-gray-900 group-hover:text-brand transition line-clamp-2 ${size === "lg" ? "text-xl" : size === "sm" ? "text-sm" : "text-base"}`}>
+        <div className="p-3 flex flex-col flex-1">
+          <h3 className={`font-semibold text-gray-900 group-hover:text-brand transition line-clamp-2 ${size === "lg" ? "text-xl leading-tight" : size === "sm" ? "text-sm leading-snug" : "text-base leading-snug"}`}>
             {displayTitle}
           </h3>
           {displaySummary && size !== "sm" && (
             <p className="text-gray-500 text-sm mt-1 line-clamp-2">{displaySummary}</p>
           )}
           {publishedAt && (
-            <p className="text-xs text-gray-400 mt-2">{format(new Date(publishedAt), "dd MMM yyyy, h:mm a")}</p>
+            <p className="text-xs text-gray-400 mt-auto pt-2">{format(new Date(publishedAt), "dd MMM yyyy, h:mm a")}</p>
           )}
         </div>
       </div>

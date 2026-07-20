@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { publicApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useSite } from "@/lib/site-context";
-import { Search, Menu, X, User, Bookmark, LogOut, Globe, Clock, Languages } from "lucide-react";
+import { Search, Menu, X, User, Bookmark, LogOut, Globe, Clock, Languages, ChevronDown } from "lucide-react";
 
 const TRANSLATE_LANGS = [
   { code: "hi", label: "हिंदी" },
@@ -155,7 +155,11 @@ export function Navbar() {
               )}
             </div>
 
-            <div className="relative">
+            <div
+              className="relative"
+              onMouseEnter={() => setSiteMenuOpen(true)}
+              onMouseLeave={() => setSiteMenuOpen(false)}
+            >
               <button onClick={() => setSiteMenuOpen(!siteMenuOpen)} className="flex items-center gap-1 text-white/70 hover:text-brand transition text-xs font-medium">
                 <Globe size={11} /> {siteName}
               </button>
@@ -268,6 +272,7 @@ export function Navbar() {
                   {isHindi ? (c.nameHindi || c.name) : c.name}
                 </Link>
               ))}
+              <Link href="/state" className={pathname.startsWith("/state") ? "active" : ""}>{isHindi ? "राज्य" : "States"}</Link>
               <Link href="/epaper" className={pathname === "/epaper" ? "active" : ""}>{isHindi ? "ई-पेपर" : "E-Paper"}</Link>
             </div>
           </div>
@@ -275,9 +280,9 @@ export function Navbar() {
       </header>
 
       {menuOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-[80] lg:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMenuOpen(false)} />
-          <div className="absolute top-0 left-0 bottom-0 w-72 bg-white shadow-xl overflow-y-auto">
+          <div className="absolute top-0 left-0 bottom-0 w-72 max-w-[85vw] bg-white shadow-xl overflow-y-auto overscroll-contain">
             <div className="p-4 border-b flex items-center justify-between">
               <span className="text-lg font-black" style={{ color: siteColor }}>{siteName}</span>
               <button onClick={() => setMenuOpen(false)} className="p-1 text-gray-500"><X size={20} /></button>
@@ -291,6 +296,7 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="border-t my-2 pt-2 space-y-0.5">
+                <Link href="/state" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">📍 {isHindi ? "राज्य" : "States"}</Link>
                 <Link href="/rashifal" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">🔮 {isHindi ? "राशिफल" : "Horoscope"}</Link>
                 <Link href="/web-stories" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">📱 {isHindi ? "वेब स्टोरीज़" : "Web Stories"}</Link>
                 <Link href="/photo-gallery" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand rounded-lg">📷 {isHindi ? "फोटो गैलरी" : "Photo Gallery"}</Link>

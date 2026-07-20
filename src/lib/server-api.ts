@@ -16,6 +16,7 @@ export const serverApi = {
   author: (slug: string) => serverFetch(`/features/authors/${slug}`),
   topic: (slug: string) => serverFetch(`/features/topics/${slug}`),
   state: (slug: string) => serverFetch(`/features/locations/states/${slug}/articles`),
+  cityArticles: (stateSlug: string, citySlug: string) => serverFetch(`/features/locations/states/${stateSlug}/cities/${citySlug}/articles`),
   webStory: (slug: string) => serverFetch(`/features/web-stories/${slug}`),
   photoGallery: (slug: string) => serverFetch(`/features/photo-galleries/${slug}`),
 };

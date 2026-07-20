@@ -4,6 +4,9 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/lib/auth-context";
 import { SiteProvider } from "@/lib/site-context";
+import { LocationProvider } from "@/lib/location-context";
+import { PushNotifications } from "@/components/PushNotifications";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const devanagari = Noto_Sans_Devanagari({ subsets: ["devanagari"], variable: "--font-hindi", weight: ["400", "500", "600", "700"] });
@@ -50,7 +53,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans min-h-screen flex flex-col bg-gray-50">
         <AuthProvider>
           <SiteProvider>
-            {children}
+            <LocationProvider>
+              <ScrollToTop />
+              {children}
+            </LocationProvider>
+            <PushNotifications />
           </SiteProvider>
           <Toaster position="bottom-right" />
         </AuthProvider>
