@@ -43,6 +43,7 @@ export function Footer() {
             <Link href="/about" className="block hover:text-brand transition">{isHindi ? "हमारे बारे में" : "About"}</Link>
             <Link href="/contact" className="block hover:text-brand transition">{isHindi ? "संपर्क करें" : "Contact"}</Link>
             <Link href="/privacy" className="block hover:text-brand transition">{isHindi ? "गोपनीयता नीति" : "Privacy"}</Link>
+            <Link href="/terms" className="block hover:text-brand transition">{isHindi ? "नियम एवं शर्तें" : "Terms & Conditions"}</Link>
           </div>
         </div>
       </div>

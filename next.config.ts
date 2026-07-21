@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
     ],
     // Local MinIO runs on localhost in dev, which Next.js blocks by default as an SSRF guard.
     dangerouslyAllowLocalIP: process.env.NODE_ENV !== "production",
+    // Site logos are served as SVG; content is self-generated (base64-embedded PNG), not user-uploaded markup.
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   async headers() {
     return [

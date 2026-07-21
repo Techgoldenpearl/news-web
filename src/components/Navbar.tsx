@@ -203,7 +203,9 @@ export function Navbar() {
               </button>
               <Link href="/home" className="flex items-center outline-none focus-visible:ring-2 focus-visible:ring-brand/40 rounded-md px-0.5">
                 {site?.logoUrl ? (
-                  <Image src={site.logoUrl} alt={siteName} width={160} height={40} className="h-8 md:h-10 w-auto object-contain" priority />
+                  <span className="relative h-12 md:h-[62px] w-36 md:w-48 block">
+                    <Image src={site.logoUrl} alt={siteName} fill className="object-contain object-left" priority />
+                  </span>
                 ) : (
                   <span className="text-xl md:text-2xl font-black tracking-tight" style={{ color: siteColor }}>{siteName}</span>
                 )}

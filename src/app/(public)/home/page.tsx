@@ -150,7 +150,7 @@ export default function HomePage() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="text-white text-sm font-semibold line-clamp-2">{g.title}</p>
+                  <p className="text-white text-sm font-semibold line-clamp-2">{isHindi ? (g.titleHindi || g.title) : g.title}</p>
                   <div className="flex items-center gap-1 mt-1">
                     <ImageIcon size={11} className="text-white/70" />
                     <span className="text-white/70 text-xs">{isHindi ? "गैलरी" : "Gallery"}</span>
@@ -175,7 +175,7 @@ export default function HomePage() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="text-white text-xs font-semibold line-clamp-3">{s.title}</p>
+                  <p className="text-white text-xs font-semibold line-clamp-3">{isHindi ? (s.titleHindi || s.title) : s.title}</p>
                 </div>
               </div>
             </Link>

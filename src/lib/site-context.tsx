@@ -12,6 +12,8 @@ interface Site {
   tagline?: string;
   primaryColor?: string;
   logoUrl?: string;
+  domain?: string;
+  socialLinks?: { facebook?: string; twitter?: string; instagram?: string; youtube?: string; whatsapp?: string };
   theme?: { primaryColor?: string; secondaryColor?: string; headerBg?: string };
 }
 
