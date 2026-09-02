@@ -1,6 +1,11 @@
 import axios from "axios";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// In production this must stay empty so requests are same-origin: the browser
+// calls whatever domain the visitor is on (e.g. bazarkarobar.com/api/...),
+// nginx forwards it with that Host header, and the backend's siteResolver
+// picks the right site. A fixed absolute URL here would make every one of
+// the multi-tenant domains resolve against a single hardcoded backend host.
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 export const api = axios.create({
   baseURL: `${API_BASE}/api`,
