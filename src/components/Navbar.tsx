@@ -53,7 +53,7 @@ function triggerGoogleTranslate(langCode: string, srcLang: string) {
 
 export function Navbar() {
   const { user, logout } = useAuth();
-  const { site, sites, switchSite, isHindi } = useSite();
+  const { site, sites, switchSite, isHindi, loading: siteLoading } = useSite();
   const [categories, setCategories] = useState<any[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -84,7 +84,7 @@ export function Navbar() {
     publicApi.categories().then((r) => setCategories(r.data.filter((c: any) => c.showInNav).slice(0, 10))).catch(() => {});
   }, [site]);
 
-  const siteName = site?.name || "NewsHub";
+  const siteName = site?.name || (siteLoading ? "" : "NewsHub");
   const siteColor = site?.primaryColor || "var(--accent)";
 
   const today = new Date().toLocaleDateString(isHindi ? "hi-IN" : "en-IN", {

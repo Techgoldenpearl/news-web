@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useSite } from "@/lib/site-context";
 
 export function Footer() {
-  const { site, isHindi } = useSite();
-  const siteName = site?.name || "NewsHub";
+  const { site, isHindi, loading: siteLoading } = useSite();
+  const siteName = site?.name || (siteLoading ? "" : "NewsHub");
 
   return (
     <footer className="bg-(--ink) text-gray-300 py-10 mt-8">

@@ -3,8 +3,8 @@
 import { useSite } from "@/lib/site-context";
 
 export default function TermsPage() {
-  const { site, isHindi } = useSite();
-  const siteName = site?.name || "NewsHub";
+  const { site, isHindi, loading: siteLoading } = useSite();
+  const siteName = site?.name || (siteLoading ? "" : "NewsHub");
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">

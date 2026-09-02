@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { api } from "./api";
+import { api, publicApi } from "./api";
 
 interface Site {
   id: number;
@@ -39,20 +39,20 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/sites").then((r) => {
-      const allSites = r.data;
-      setSites(allSites);
+    Promise.all([publicApi.siteResolve(), api.get("/sites")])
+      .then(([resolved, list]) => {
+        const allSites = list.data;
+        setSites(allSites);
 
-      const savedId = localStorage.getItem("siteId");
-      const initial = savedId
-        ? allSites.find((s: Site) => s.id === parseInt(savedId)) || allSites[0]
-        : allSites[0];
+        const initial = resolved.data || allSites[0];
 
-      if (initial) {
-        setSite(initial);
-        api.defaults.headers.common["X-Site-ID"] = String(initial.id);
-      }
-    }).catch(() => {}).finally(() => setLoading(false));
+        if (initial) {
+          setSite(initial);
+          api.defaults.headers.common["X-Site-ID"] = String(initial.id);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const switchSite = (siteId: number) => {

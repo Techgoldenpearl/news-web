@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { useSite } from "@/lib/site-context";
 
 export default function ContactPage() {
-  const { site, isHindi } = useSite();
-  const siteName = site?.name || "NewsHub";
+  const { site, isHindi, loading: siteLoading } = useSite();
+  const siteName = site?.name || (siteLoading ? "" : "NewsHub");
   const domain = site?.domain?.replace(/\.localhost$/, ".com") || "example.com";
   const contactEmail = `contact@${domain}`;
 
