@@ -1,8 +1,21 @@
+import { headers } from "next/headers";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 async function serverFetch(path: string) {
   try {
-    const res = await fetch(`${API_BASE}/api${path}`, { next: { revalidate: 60 } });
+    // Forward the visitor's actual Host so the backend's siteResolver can
+    // match it against sites.domain/subdomain — without this, SSR requests
+    // all look identical regardless of which of the multi-tenant domains
+    // the visitor is on, and the backend falls back to returning unfiltered
+    // articles across every site.
+    const incomingHeaders = await headers();
+    const host = incomingHeaders.get("x-forwarded-host") ?? incomingHeaders.get("host");
+
+    const res = await fetch(`${API_BASE}/api${path}`, {
+      headers: host ? { "X-Site-Domain": host } : undefined,
+      next: { revalidate: 60 },
+    });
     if (!res.ok) return null;
     return res.json();
   } catch {
