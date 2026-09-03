@@ -7,15 +7,31 @@ import { SiteProvider } from "@/lib/site-context";
 import { LocationProvider } from "@/lib/location-context";
 import { PushNotifications } from "@/components/PushNotifications";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { serverApi } from "@/lib/server-api";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const devanagari = Noto_Sans_Devanagari({ subsets: ["devanagari"], variable: "--font-hindi", weight: ["400", "500", "600", "700"] });
 
-export const metadata: Metadata = {
-  title: "NewsHub - Hindi News Portal",
-  description: "Latest Hindi news, breaking news, politics, sports, entertainment, rashifal and more",
-  manifest: "/manifest.json",
-};
+const DEFAULT_TITLE = "NewsHub - Hindi News Portal";
+const DEFAULT_DESCRIPTION = "Latest Hindi news, breaking news, politics, sports, entertainment, rashifal and more";
+
+// This app serves 7+ tenant domains from one deployment, differentiated only
+// by the incoming Host header. Metadata here resolves the site per-request
+// via serverApi.site(), so this route tree must render dynamically —
+// otherwise Next prerenders a page like /home once (e.g. for whichever
+// domain requests it first) and reuses that cached HTML, title included,
+// for every other domain that shares the same path.
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await serverApi.site();
+
+  return {
+    title: site?.name ? `${site.name} - Hindi News Portal` : DEFAULT_TITLE,
+    description: site?.description || site?.seoDefaults?.metaDescription || DEFAULT_DESCRIPTION,
+    manifest: "/manifest.json",
+  };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

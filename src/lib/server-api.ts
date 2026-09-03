@@ -24,6 +24,7 @@ async function serverFetch(path: string) {
 }
 
 export const serverApi = {
+  site: () => serverFetch(`/sites/resolve`),
   article: (slug: string) => serverFetch(`/articles/${slug}`),
   category: (slug: string) => serverFetch(`/categories/${slug}`),
   author: (slug: string) => serverFetch(`/features/authors/${slug}`),
