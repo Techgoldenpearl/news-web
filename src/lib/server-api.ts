@@ -1,6 +1,9 @@
 import { headers } from "next/headers";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// Server-side fetches run inside the web container itself, so they must reach
+// the api container over the Docker network (its Compose service name), not
+// "localhost" — that only works when both run on the same host, e.g. local dev.
+const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 async function serverFetch(path: string) {
   try {
