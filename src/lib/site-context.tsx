@@ -13,6 +13,7 @@ interface Site {
   primaryColor?: string;
   logoUrl?: string;
   domain?: string;
+  subdomain?: string;
   socialLinks?: { facebook?: string; twitter?: string; instagram?: string; youtube?: string; whatsapp?: string };
   theme?: { primaryColor?: string; secondaryColor?: string; headerBg?: string };
 }
@@ -57,12 +58,23 @@ export function SiteProvider({ children }: { children: ReactNode }) {
 
   const switchSite = (siteId: number) => {
     const found = sites.find((s) => s.id === siteId);
-    if (found) {
-      setSite(found);
-      localStorage.setItem("siteId", String(siteId));
-      api.defaults.headers.common["X-Site-ID"] = String(siteId);
-      window.location.reload();
+    if (!found) return;
+
+    // Each site lives on its own domain, so switching should open that
+    // domain in a new tab rather than mutating the current one — otherwise
+    // the current tab still needs its own X-Site-ID/domain to resolve correctly.
+    const target = found.domain || found.subdomain;
+    if (target) {
+      const url = /^https?:\/\//.test(target) ? target : `https://${target}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
     }
+
+    // No domain configured for this site — fall back to switching in place.
+    setSite(found);
+    localStorage.setItem("siteId", String(siteId));
+    api.defaults.headers.common["X-Site-ID"] = String(siteId);
+    window.location.reload();
   };
 
   // Normalize primaryColor: may be a top-level field or inside theme object
