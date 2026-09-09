@@ -40,12 +40,12 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([publicApi.siteResolve(), api.get("/sites")])
+    Promise.allSettled([publicApi.siteResolve(), api.get("/sites")])
       .then(([resolved, list]) => {
-        const allSites = list.data;
+        const allSites = list.status === "fulfilled" ? list.value.data : [];
         setSites(allSites);
 
-        const initial = resolved.data || allSites[0];
+        const initial = (resolved.status === "fulfilled" ? resolved.value.data : null) || allSites[0];
 
         if (initial) {
           setSite(initial);
