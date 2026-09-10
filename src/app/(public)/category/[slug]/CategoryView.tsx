@@ -10,8 +10,9 @@ import { useSite } from "@/lib/site-context";
 
 export default function CategoryView() {
   const { slug } = useParams();
-  const { isHindi } = useSite();
+  const { site, isHindi, loading: siteLoading } = useSite();
   const [category, setCategory] = useState<any>(null);
+  const [categoryChecked, setCategoryChecked] = useState(false);
   const [articles, setArticles] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -19,18 +20,25 @@ export default function CategoryView() {
   const observerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (slug) {
+    // Wait for the site to resolve first — otherwise this fires before
+    // X-Site-ID is set and can pull back a category from another tenant,
+    // leaving the header's (site-scoped) category strip with no matching tab.
+    if (slug && !siteLoading) {
       setCategory(null);
+      setCategoryChecked(false);
       setArticles([]);
       setPage(1);
       setHasMore(false);
-      publicApi.category(slug as string).then((r) => setCategory(r.data)).catch(() => {});
+      publicApi.category(slug as string)
+        .then((r) => setCategory(r.data))
+        .catch(() => setCategory(null))
+        .finally(() => setCategoryChecked(true));
       publicApi.articles({ categorySlug: slug, page: 1, limit: 12 }).then((r) => {
         setArticles(r.data.items);
         setHasMore(r.data.hasMore);
       }).catch(() => {});
     }
-  }, [slug]);
+  }, [slug, siteLoading, site?.id]);
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore || !slug) return;
@@ -65,36 +73,44 @@ export default function CategoryView() {
         </div>
       )}
 
-      <CategoryTopAd />
+      {categoryChecked && !category ? (
+        <p className="text-center text-gray-400 py-16">
+          {isHindi ? "यह श्रेणी इस साइट पर मौजूद नहीं है" : "This category doesn't exist on this site"}
+        </p>
+      ) : (
+        <>
+          <CategoryTopAd />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-4">
-        <div className="lg:col-span-3">
-          <div className={`grid grid-cols-1 ${articles.length > 1 ? "md:grid-cols-2" : ""} gap-4`}>
-            {articles.map((a, i) => (
-              <Fragment key={a.id}>
-                <NewsCard {...a} size={articles.length === 1 ? "lg" : "md"} />
-                {(i + 1) % 6 === 0 && (
-                  <div className="md:col-span-2">
-                    <AdSlot zone="category-top" className="w-full max-w-full" />
-                  </div>
-                )}
-              </Fragment>
-            ))}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-4">
+            <div className="lg:col-span-3">
+              <div className={`grid grid-cols-1 ${articles.length > 1 ? "md:grid-cols-2" : ""} gap-4`}>
+                {articles.map((a, i) => (
+                  <Fragment key={a.id}>
+                    <NewsCard {...a} size={articles.length === 1 ? "lg" : "md"} />
+                    {(i + 1) % 6 === 0 && (
+                      <div className="md:col-span-2">
+                        <AdSlot zone="category-top" className="w-full max-w-full" />
+                      </div>
+                    )}
+                  </Fragment>
+                ))}
+              </div>
+
+              {articles.length === 0 && <p className="text-center text-gray-400 py-12">{isHindi ? "इस श्रेणी में कोई लेख नहीं" : "No articles in this category"}</p>}
+
+              <div ref={observerRef} className="py-8 text-center">
+                {loadingMore && <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-brand mx-auto" />}
+                {!hasMore && articles.length >= 6 && <p className="text-gray-400 text-sm">{isHindi ? "और कोई लेख नहीं" : "No more articles"}</p>}
+              </div>
+            </div>
+
+            <aside className="space-y-4">
+              <AdSlot zone="sidebar-top" className="w-full" />
+              <AdSlot zone="sidebar-middle" className="w-full" />
+            </aside>
           </div>
-
-          {articles.length === 0 && <p className="text-center text-gray-400 py-12">{isHindi ? "इस श्रेणी में कोई लेख नहीं" : "No articles in this category"}</p>}
-
-          <div ref={observerRef} className="py-8 text-center">
-            {loadingMore && <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-brand mx-auto" />}
-            {!hasMore && articles.length >= 6 && <p className="text-gray-400 text-sm">{isHindi ? "और कोई लेख नहीं" : "No more articles"}</p>}
-          </div>
-        </div>
-
-        <aside className="space-y-4">
-          <AdSlot zone="sidebar-top" className="w-full" />
-          <AdSlot zone="sidebar-middle" className="w-full" />
-        </aside>
-      </div>
+        </>
+      )}
     </div>
   );
 }

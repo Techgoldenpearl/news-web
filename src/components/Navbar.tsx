@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { publicApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useSite } from "@/lib/site-context";
-import { Search, Menu, X, User, Bookmark, LogOut, Globe, Clock, Languages, ChevronDown } from "lucide-react";
+import { Search, Menu, X, User, Bookmark, LogOut, Globe, Clock, Languages, ChevronDown, MoreHorizontal } from "lucide-react";
 
 const TRANSLATE_LANGS = [
   { code: "hi", label: "हिंदी" },
@@ -60,6 +60,7 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [siteMenuOpen, setSiteMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [translateOpen, setTranslateOpen] = useState(false);
   const [translatePos, setTranslatePos] = useState({ top: 0, right: 0 });
   const [activeLang, setActiveLang] = useState<string>('hi');
@@ -104,16 +105,31 @@ export function Navbar() {
             <Link href="/video" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "वीडियो" : "Video"}</Link>
             <Link href="/rashifal" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "राशिफल" : "Horoscope"}</Link>
             <Link href="/web-stories" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "वेब स्टोरीज़" : "Web Stories"}</Link>
-            <Link href="/photo-gallery" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "फोटो गैलरी" : "Gallery"}</Link>
             <Link href="/epaper" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "ई-पेपर" : "E-Paper"}</Link>
-            <Link href="/shok-sandesh" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "शोक संदेश" : "Obituaries"}</Link>
-            <Link href="/classifieds" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "वर्गीकृत विज्ञापन" : "Classifieds"}</Link>
-            <Link href="/patrakar/login" className="bg-brand-tint text-brand hover:opacity-80 transition text-xs font-bold px-2 py-0.5 rounded">
-              📰 {isHindi ? "पत्रकार पोर्टल" : "Journalist Portal"}
-            </Link>
-            <Link href="/advertiser/login" className="bg-brand text-white hover:opacity-90 transition text-xs font-bold px-2 py-0.5 rounded">
-              📣 {isHindi ? "विज्ञापन दें" : "Advertise"}
-            </Link>
+
+            {/* More: secondary links that don't need to compete for topbar space */}
+            <div
+              className="relative"
+              onMouseEnter={() => setMoreOpen(true)}
+              onMouseLeave={() => setMoreOpen(false)}
+            >
+              <button onClick={() => setMoreOpen(!moreOpen)} className="flex items-center gap-1 text-white/70 hover:text-brand transition text-xs font-medium">
+                {isHindi ? "अधिक" : "More"} <ChevronDown size={12} />
+              </button>
+              {moreOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-white border rounded-xl shadow-lg z-50 py-1">
+                    <Link href="/photo-gallery" onClick={() => setMoreOpen(false)} className="block px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand">{isHindi ? "फोटो गैलरी" : "Photo Gallery"}</Link>
+                    <Link href="/shok-sandesh" onClick={() => setMoreOpen(false)} className="block px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand">{isHindi ? "शोक संदेश" : "Obituaries"}</Link>
+                    <Link href="/classifieds" onClick={() => setMoreOpen(false)} className="block px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-brand">{isHindi ? "वर्गीकृत विज्ञापन" : "Classifieds"}</Link>
+                    <div className="border-t my-1" />
+                    <Link href="/patrakar/login" onClick={() => setMoreOpen(false)} className="block px-3 py-2 text-sm text-brand font-semibold hover:bg-orange-50">📰 {isHindi ? "पत्रकार पोर्टल" : "Journalist Portal"}</Link>
+                    <Link href="/advertiser/login" onClick={() => setMoreOpen(false)} className="block px-3 py-2 text-sm text-brand font-semibold hover:bg-orange-50">📣 {isHindi ? "विज्ञापन दें" : "Advertise"}</Link>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Translate dropdown */}
             <div className="relative">
@@ -182,11 +198,7 @@ export function Navbar() {
                 </>
               )}
             </div>
-            {user ? (
-              <Link href="/profile" className="text-white/70 hover:text-brand transition text-xs font-medium flex items-center gap-1">
-                <User size={11} /> {user.name || (isHindi ? "प्रोफ़ाइल" : "Profile")}
-              </Link>
-            ) : (
+            {!user && (
               <Link href="/login" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "लॉगिन / रजिस्टर" : "Login / Register"}</Link>
             )}
           </div>
@@ -275,7 +287,6 @@ export function Navbar() {
                 </Link>
               ))}
               <Link href="/state" className={pathname.startsWith("/state") ? "active" : ""}>{isHindi ? "राज्य" : "States"}</Link>
-              <Link href="/epaper" className={pathname === "/epaper" ? "active" : ""}>{isHindi ? "ई-पेपर" : "E-Paper"}</Link>
             </div>
           </div>
         </div>

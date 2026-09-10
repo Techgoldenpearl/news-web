@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import { NewsCard } from "@/components/NewsCard";
@@ -34,34 +34,46 @@ export default function HomePage() {
     publicApi.webStories({ limit: 10 }).then((r) => setStories(r.data)).catch(() => {});
   }, [site]);
 
+  // Hero + side items pull from featured (padded by latest when featured is short).
+  // Track which article ids they used so the Latest News section below never repeats them.
+  const { heroArticle, sideArticles, heroUsedIds } = useMemo(() => {
+    if (featured.length === 0 && latest.length === 0) {
+      return { heroArticle: null as any, sideArticles: [] as any[], heroUsedIds: new Set<string>() };
+    }
+    const hero = featured[0] ?? latest[0];
+    const usedIds = new Set([hero.id]);
+    const side: any[] = [];
+    for (const a of [...featured.slice(1), ...latest]) {
+      if (side.length >= 4) break;
+      if (usedIds.has(a.id)) continue;
+      usedIds.add(a.id);
+      side.push(a);
+    }
+    return { heroArticle: hero, sideArticles: side, heroUsedIds: usedIds };
+  }, [featured, latest]);
+
+  const latestExcludingHero = useMemo(
+    () => latest.filter((a) => !heroUsedIds.has(a.id)),
+    [latest, heroUsedIds]
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       {/* HERO: big feature + side items (pads from latest news when featured is short, so the panel never looks sparse) */}
-      {(featured.length > 0 || latest.length > 0) && (() => {
-        const heroArticle = featured[0] ?? latest[0];
-        const usedIds = new Set([heroArticle.id]);
-        const sideArticles: any[] = [];
-        for (const a of [...featured.slice(1), ...latest]) {
-          if (sideArticles.length >= 4) break;
-          if (usedIds.has(a.id)) continue;
-          usedIds.add(a.id);
-          sideArticles.push(a);
-        }
-        return (
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-            <div className="lg:col-span-2">
-              <NewsCard {...heroArticle} size="lg" />
+      {heroArticle && (
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+          <div className="lg:col-span-2">
+            <NewsCard {...heroArticle} size="lg" />
+          </div>
+          {sideArticles.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 bg-white rounded-xl border p-4">
+              {sideArticles.map((a) => (
+                <CompactNewsCard key={a.id} {...a} />
+              ))}
             </div>
-            {sideArticles.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 bg-white rounded-xl border p-4">
-                {sideArticles.map((a) => (
-                  <CompactNewsCard key={a.id} {...a} />
-                ))}
-              </div>
-            )}
-          </section>
-        );
-      })()}
+          )}
+        </section>
+      )}
 
       {/* TRENDING — full width, numbered grid */}
       {trending.length > 0 && (
@@ -83,16 +95,18 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* LATEST NEWS */}
-      <section className="bg-white rounded-xl border p-4 sm:p-5">
-        <div className="flex items-center gap-2.5 mb-4 pb-2 border-b border-(--line)">
-          <div className="w-1 h-6 rounded-full bg-brand" />
-          <h2 className="text-lg font-black text-gray-900">{isHindi ? "ताज़ा खबरें" : "Latest News"}</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
-          {latest.map((a) => <CompactNewsCard key={a.id} {...a} />)}
-        </div>
-      </section>
+      {/* LATEST NEWS — excludes whatever the hero/side panel already showed above */}
+      {latestExcludingHero.length > 0 && (
+        <section className="bg-white rounded-xl border p-4 sm:p-5">
+          <div className="flex items-center gap-2.5 mb-4 pb-2 border-b border-(--line)">
+            <div className="w-1 h-6 rounded-full bg-brand" />
+            <h2 className="text-lg font-black text-gray-900">{isHindi ? "ताज़ा खबरें" : "Latest News"}</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+            {latestExcludingHero.map((a) => <CompactNewsCard key={a.id} {...a} />)}
+          </div>
+        </section>
+      )}
 
       <SidebarAd position="top" className="bg-white rounded-xl border p-3" />
 

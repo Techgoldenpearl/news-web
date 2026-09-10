@@ -60,17 +60,21 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     const found = sites.find((s) => s.id === siteId);
     if (!found) return;
 
-    // Each site lives on its own domain, so switching should open that
-    // domain in a new tab rather than mutating the current one — otherwise
-    // the current tab still needs its own X-Site-ID/domain to resolve correctly.
-    const target = found.domain || found.subdomain;
+    // In production each site lives on its own domain, so switching should
+    // open that domain in a new tab rather than mutating the current one —
+    // otherwise the current tab still needs its own X-Site-ID/domain to
+    // resolve correctly. In local dev there's only one origin (localhost),
+    // so jumping to the live domain would leave the local environment
+    // entirely — switch in place instead, same as when no domain is set.
+    const isLocalDev = typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+    const target = !isLocalDev && (found.domain || found.subdomain);
     if (target) {
       const url = /^https?:\/\//.test(target) ? target : `https://${target}`;
       window.open(url, "_blank", "noopener,noreferrer");
       return;
     }
 
-    // No domain configured for this site — fall back to switching in place.
+    // No domain configured (or running in local dev) — switch in place.
     setSite(found);
     localStorage.setItem("siteId", String(siteId));
     api.defaults.headers.common["X-Site-ID"] = String(siteId);
