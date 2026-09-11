@@ -3,53 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { publicApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useSite } from "@/lib/site-context";
-import { Search, Menu, X, User, Bookmark, LogOut, Globe, Clock, Languages, ChevronDown, MoreHorizontal } from "lucide-react";
-
-const TRANSLATE_LANGS = [
-  { code: "hi", label: "हिंदी" },
-  { code: "en", label: "English" },
-  { code: "bn", label: "বাংলা" },
-  { code: "ta", label: "தமிழ்" },
-  { code: "te", label: "తెలుగు" },
-  { code: "mr", label: "मराठी" },
-  { code: "gu", label: "ગુજરાતી" },
-  { code: "kn", label: "ಕನ್ನಡ" },
-  { code: "ml", label: "മലയാളം" },
-  { code: "pa", label: "ਪੰਜਾਬੀ" },
-  { code: "ur", label: "اردو" },
-];
-
-function setGoogTransCookie(value: string) {
-  // Set without explicit domain first (works for localhost and subdomains)
-  document.cookie = `googtrans=${value}; path=/`;
-  // Also set with domain for production (may be ignored on localhost, that's fine)
-  const host = location.hostname;
-  if (host !== 'localhost' && host !== '127.0.0.1') {
-    document.cookie = `googtrans=${value}; path=/; domain=${host}`;
-  }
-}
-
-function clearGoogTransCookie() {
-  const exp = 'expires=Thu, 01 Jan 1970 00:00:00 UTC';
-  document.cookie = `googtrans=; ${exp}; path=/`;
-  const host = location.hostname;
-  if (host !== 'localhost' && host !== '127.0.0.1') {
-    document.cookie = `googtrans=; ${exp}; path=/; domain=${host}`;
-  }
-}
-
-function triggerGoogleTranslate(langCode: string, srcLang: string) {
-  if (langCode === srcLang) {
-    clearGoogTransCookie();
-  } else {
-    setGoogTransCookie(`/${srcLang}/${langCode}`);
-  }
-  window.location.reload();
-}
+import { Search, Menu, X, User, Bookmark, LogOut, Globe, Clock, ChevronDown, MoreHorizontal } from "lucide-react";
 
 export function Navbar() {
   const { user, logout } = useAuth();
@@ -61,23 +19,6 @@ export function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [siteMenuOpen, setSiteMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [translateOpen, setTranslateOpen] = useState(false);
-  const [translatePos, setTranslatePos] = useState({ top: 0, right: 0 });
-  const [activeLang, setActiveLang] = useState<string>('hi');
-  const translateBtnRef = useRef<HTMLButtonElement>(null);
-
-  // Source language of the current site (hi for Hindi sites, en for English sites)
-  const srcLang = site?.language || 'hi';
-
-  useEffect(() => {
-    // Read active translated language from googtrans cookie
-    const match = document.cookie.match(/googtrans=\/\w+\/(\w+)/);
-    if (match && match[1]) {
-      setActiveLang(match[1]);
-    } else {
-      setActiveLang(srcLang);
-    }
-  }, [srcLang]);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -131,46 +72,6 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Translate dropdown */}
-            <div className="relative">
-              <button
-                ref={translateBtnRef}
-                onClick={() => {
-                  if (!translateOpen && translateBtnRef.current) {
-                    const rect = translateBtnRef.current.getBoundingClientRect();
-                    setTranslatePos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
-                  }
-                  setTranslateOpen(!translateOpen);
-                }}
-                className="flex items-center gap-1 text-white/70 hover:text-brand transition text-xs font-medium"
-                title="Translate page"
-              >
-                <Languages size={13} />
-                {TRANSLATE_LANGS.find(l => l.code === activeLang)?.label || 'Translate'}
-              </button>
-              {translateOpen && (
-                <>
-                  <div className="fixed inset-0 z-[65]" onClick={() => setTranslateOpen(false)} />
-                  <div
-                    className="fixed w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-[70] py-1 max-h-72 overflow-y-auto"
-                    style={{ top: translatePos.top, right: translatePos.right }}
-                  >
-                    <p className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide border-b border-gray-100 mb-1">Translate To</p>
-                    {TRANSLATE_LANGS.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => { triggerGoogleTranslate(lang.code, srcLang); setActiveLang(lang.code); setTranslateOpen(false); }}
-                        className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${activeLang === lang.code ? 'bg-orange-50 text-brand font-semibold' : 'text-gray-700 hover:bg-orange-50 hover:text-brand'}`}
-                      >
-                        {lang.label}
-                        {activeLang === lang.code && <span className="text-brand text-xs">✓</span>}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
             <div
               className="relative"
               onMouseEnter={() => setSiteMenuOpen(true)}
@@ -198,9 +99,6 @@ export function Navbar() {
                 </>
               )}
             </div>
-            {!user && (
-              <Link href="/login" className="text-white/70 hover:text-brand transition text-xs font-medium">{isHindi ? "लॉगिन / रजिस्टर" : "Login / Register"}</Link>
-            )}
           </div>
         </div>
       </div>
@@ -209,17 +107,17 @@ export function Navbar() {
       <header className="news-navbar sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-14 md:h-[70px]">
-            <div className="flex items-center gap-3">
-              <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg">
+            <div className="flex items-center gap-3 min-w-0 shrink">
+              <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg shrink-0">
                 {menuOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
-              <Link href="/home" className="flex items-center outline-none focus-visible:ring-2 focus-visible:ring-brand/40 rounded-md px-0.5">
+              <Link href="/home" className="flex items-center outline-none focus-visible:ring-2 focus-visible:ring-brand/40 rounded-md px-0.5 min-w-0 shrink">
                 {site?.logoUrl ? (
-                  <span className="relative h-12 md:h-[62px] w-36 md:w-48 block">
+                  <span className="relative h-12 md:h-[62px] w-24 sm:w-36 md:w-48 block shrink min-w-0">
                     <Image src={site.logoUrl} alt={siteName} fill className="object-contain object-left" priority />
                   </span>
                 ) : (
-                  <span className="text-xl md:text-2xl font-black tracking-tight" style={{ color: siteColor }}>{siteName}</span>
+                  <span className="text-xl md:text-2xl font-black tracking-tight truncate" style={{ color: siteColor }}>{siteName}</span>
                 )}
               </Link>
             </div>
@@ -227,10 +125,10 @@ export function Navbar() {
             <div className="flex items-center gap-1">
               {searchOpen ? (
                 <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) { router.push(`/search?q=${encodeURIComponent(searchQuery)}`); setSearchOpen(false); } }}
-                  className="flex items-center gap-1">
+                  className="flex items-center gap-1 min-w-0">
                   <input autoFocus value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={isHindi ? "खोजें..." : "Search..."} className="px-3 py-1.5 border rounded-full text-sm w-44 focus:w-56 transition-all focus:ring-2 focus:ring-orange-300 focus:border-brand" />
-                  <button type="button" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="p-1.5 text-gray-400"><X size={16} /></button>
+                    placeholder={isHindi ? "खोजें..." : "Search..."} className="px-3 py-1.5 border rounded-full text-sm w-28 sm:w-44 md:focus:w-56 transition-all focus:ring-2 focus:ring-orange-300 focus:border-brand min-w-0" />
+                  <button type="button" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="p-1.5 text-gray-400 shrink-0"><X size={16} /></button>
                 </form>
               ) : (
                 <button onClick={() => setSearchOpen(true)} className="p-2 text-gray-500 hover:text-brand hover:bg-orange-50 rounded-lg transition">
