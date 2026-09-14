@@ -105,10 +105,10 @@ export function Navbar() {
 
       {/* Main navbar */}
       <header className="news-navbar sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
           <div className="flex items-center justify-between h-14 md:h-[70px]">
-            <div className="flex items-center gap-3 min-w-0 shrink">
-              <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
+              <button onClick={() => setMenuOpen(!menuOpen)} aria-label={isHindi ? "मेनू" : "Menu"} className="lg:hidden p-2 -ml-1 hover:bg-gray-100 active:bg-gray-200 rounded-lg shrink-0 transition-colors">
                 {menuOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
               <Link href="/home" className="flex items-center outline-none focus-visible:ring-2 focus-visible:ring-brand/40 rounded-md px-0.5 min-w-0 shrink">
@@ -122,16 +122,16 @@ export function Navbar() {
               </Link>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 sm:gap-1">
               {searchOpen ? (
                 <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) { router.push(`/search?q=${encodeURIComponent(searchQuery)}`); setSearchOpen(false); } }}
                   className="flex items-center gap-1 min-w-0">
                   <input autoFocus value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={isHindi ? "खोजें..." : "Search..."} className="px-3 py-1.5 border rounded-full text-sm w-28 sm:w-44 md:focus:w-56 transition-all focus:ring-2 focus:ring-orange-300 focus:border-brand min-w-0" />
-                  <button type="button" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} className="p-1.5 text-gray-400 shrink-0"><X size={16} /></button>
+                    placeholder={isHindi ? "खोजें..." : "Search..."} className="px-3 py-1.5 border rounded-full text-sm w-32 sm:w-44 md:focus:w-56 transition-all focus:ring-2 focus:ring-orange-300 focus:border-brand min-w-0" />
+                  <button type="button" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} aria-label={isHindi ? "बंद करें" : "Close"} className="p-2 text-gray-400 shrink-0"><X size={16} /></button>
                 </form>
               ) : (
-                <button onClick={() => setSearchOpen(true)} className="p-2 text-gray-500 hover:text-brand hover:bg-orange-50 rounded-lg transition">
+                <button onClick={() => setSearchOpen(true)} aria-label={isHindi ? "खोजें" : "Search"} className="p-2 text-gray-500 hover:text-brand hover:bg-orange-50 active:bg-orange-100 rounded-lg transition-colors">
                   <Search size={18} />
                 </button>
               )}
@@ -166,7 +166,7 @@ export function Navbar() {
                   )}
                 </div>
               ) : (
-                <Link href="/login" className="hidden md:flex items-center gap-1.5 text-white text-sm font-bold px-3 py-1.5 rounded-lg ml-1 transition bg-brand hover:opacity-90">
+                <Link href="/login" className="flex items-center gap-1.5 text-white text-xs sm:text-sm font-bold px-2.5 sm:px-3 py-1.5 rounded-lg ml-1 transition bg-brand hover:opacity-90 shrink-0">
                   <User size={14} /> {isHindi ? "लॉगिन" : "Login"}
                 </Link>
               )}

@@ -13,9 +13,10 @@ interface CategoryBlockProps {
   categoryName: string;
   categoryNameHindi?: string;
   categoryColor?: string;
+  shownArticleIds?: Set<number>;
 }
 
-export function CategoryBlock({ categorySlug, categoryName, categoryNameHindi, categoryColor }: CategoryBlockProps) {
+export function CategoryBlock({ categorySlug, categoryName, categoryNameHindi, categoryColor, shownArticleIds }: CategoryBlockProps) {
   const { isHindi } = useSite();
   const [articles, setArticles] = useState<any[]>([]);
 
@@ -23,7 +24,19 @@ export function CategoryBlock({ categorySlug, categoryName, categoryNameHindi, c
     publicApi.articles({ categorySlug, limit: 7 }).then((r) => setArticles(r.data.items)).catch(() => {});
   }, [categorySlug]);
 
-  if (articles.length === 0) return null;
+  // Filter out articles already shown elsewhere on the page (hero, earlier category
+  // blocks). Pure — no mutation during render.
+  const visibleArticles = shownArticleIds ? articles.filter((a) => !shownArticleIds.has(a.id)) : articles;
+
+  // Register this block's picks so blocks rendered after it skip them too.
+  // This mutates the shared Set, so it belongs in an effect, not in render.
+  useEffect(() => {
+    if (!shownArticleIds) return;
+    for (const a of visibleArticles) shownArticleIds.add(a.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [articles, shownArticleIds]);
+
+  if (visibleArticles.length === 0) return null;
 
   const displayName = isHindi ? (categoryNameHindi || categoryName) : categoryName;
 
@@ -31,22 +44,22 @@ export function CategoryBlock({ categorySlug, categoryName, categoryNameHindi, c
     <section className="bg-white rounded-xl border p-4 sm:p-5">
       <div className="flex items-center justify-between mb-4 pb-2 border-b border-(--line)">
         <div className="flex items-center gap-2.5">
-          <div className="w-1 h-6 rounded-full bg-brand" />
+          <div className="w-1 h-6 rounded-full" style={{ backgroundColor: categoryColor || "var(--accent)" }} />
           <h2 className="text-lg font-black text-gray-900">{displayName}</h2>
         </div>
-        <Link href={`/category/${categorySlug}`} className="flex items-center gap-0.5 text-xs font-bold text-brand hover:opacity-80 transition uppercase tracking-wide">
+        <Link href={`/category/${categorySlug}`} className="flex items-center gap-0.5 text-xs font-bold text-brand hover:opacity-80 transition uppercase tracking-wide shrink-0">
           {isHindi ? "और देखें" : "View More"} <ChevronRight size={14} />
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {articles[0] && (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+        {visibleArticles[0] && (
           <div className="lg:col-span-1">
-            <NewsCard {...articles[0]} size="md" />
+            <NewsCard {...visibleArticles[0]} size="md" />
           </div>
         )}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-          {articles.slice(1, 7).map((a) => <CompactNewsCard key={a.id} {...a} />)}
+          {visibleArticles.slice(1, 7).map((a) => <CompactNewsCard key={a.id} {...a} />)}
         </div>
       </div>
     </section>

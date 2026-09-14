@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useReporterAuth } from "@/lib/reporter-auth-context";
 import Link from "next/link";
 import { Newspaper, Mail, Lock, ArrowLeft, Languages } from "lucide-react";
+import PasswordInput from "@/components/PasswordInput";
+import { portalLoginSchema, fieldErrorsFrom } from "@/lib/auth-validation";
 
 const t = {
   hi: {
@@ -45,6 +47,8 @@ export default function PatrakarLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<"hi" | "en">("hi");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const { login, reporter } = useReporterAuth();
   const router = useRouter();
   const l = t[lang];
@@ -55,9 +59,22 @@ export default function PatrakarLoginPage() {
 
   if (reporter) return null;
 
+  const validate = (values: { email: string; password: string }) =>
+    fieldErrorsFrom(portalLoginSchema(lang).safeParse(values));
+
+  const handleBlur = (field: "email" | "password") => {
+    setTouched((tt) => ({ ...tt, [field]: true }));
+    setFieldErrors(validate({ email, password }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setTouched({ email: true, password: true });
+    const errors = validate({ email, password });
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setLoading(true);
     try {
       await login(email, password);
@@ -108,25 +125,26 @@ export default function PatrakarLoginPage() {
                 placeholder={l.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-200 focus:border-brand outline-none transition"
+                onBlur={() => handleBlur("email")}
+                className={`w-full pl-10 pr-4 py-3 border rounded-xl text-sm focus:ring-2 focus:ring-orange-200 focus:border-brand outline-none transition ${touched.email && fieldErrors.email ? "border-red-400" : "border-gray-200"}`}
               />
             </div>
+            {touched.email && fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1.5">{l.passwordLabel}</label>
             <div className="relative">
-              <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="password"
+              <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 z-10" />
+              <PasswordInput
                 placeholder={l.passwordPlaceholder}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-200 focus:border-brand outline-none transition"
+                onBlur={() => handleBlur("password")}
+                className={`w-full pl-10 pr-4 py-3 border rounded-xl text-sm focus:ring-2 focus:ring-orange-200 focus:border-brand outline-none transition ${touched.password && fieldErrors.password ? "border-red-400" : "border-gray-200"}`}
               />
             </div>
+            {touched.password && fieldErrors.password && <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>}
           </div>
 
           <button

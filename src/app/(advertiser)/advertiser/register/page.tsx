@@ -6,6 +6,8 @@ import { useAdvertiserAuth } from "@/lib/advertiser-auth-context";
 import { advertiserAuthApi } from "@/lib/advertiser-api";
 import Link from "next/link";
 import { Megaphone, ArrowLeft, Languages } from "lucide-react";
+import PasswordInput from "@/components/PasswordInput";
+import { advertiserRegisterSchema, fieldErrorsFrom } from "@/lib/auth-validation";
 
 const t = {
   hi: {
@@ -51,16 +53,40 @@ export default function AdvertiserRegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<"hi" | "en">("hi");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const { refresh } = useAdvertiserAuth();
   const router = useRouter();
   const l = t[lang];
 
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm({ ...form, [k]: e.target.value });
+  const validate = (values: typeof form) =>
+    fieldErrorsFrom(advertiserRegisterSchema(lang).safeParse(values));
+
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = { ...form, [k]: e.target.value };
+    setForm(next);
+    if (touched[k]) setFieldErrors(validate(next));
+  };
+
+  const setPhone = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = { ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) };
+    setForm(next);
+    if (touched.phone) setFieldErrors(validate(next));
+  };
+
+  const handleBlur = (field: string) => {
+    setTouched((tt) => ({ ...tt, [field]: true }));
+    setFieldErrors(validate(form));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setTouched({ companyName: true, contactName: true, email: true, password: true, phone: true, website: true });
+    const errors = validate(form);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setLoading(true);
     try {
       await advertiserAuthApi.register(form);
@@ -70,6 +96,9 @@ export default function AdvertiserRegisterPage() {
       setError(err.response?.data?.error || "Registration failed. Please try again.");
     } finally { setLoading(false); }
   };
+
+  const fieldClass = (field: string) =>
+    `${inp} ${touched[field] && fieldErrors[field] ? "border-red-400" : ""}`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-6">
@@ -109,27 +138,32 @@ export default function AdvertiserRegisterPage() {
             {/* Company + Contact */}
             <div className="col-span-2">
               <label className="block text-xs font-semibold text-gray-500 mb-1">{l.companyName}</label>
-              <input placeholder={l.companyNamePh} value={form.companyName} onChange={set("companyName")} required className={inp} />
+              <input placeholder={l.companyNamePh} value={form.companyName} onChange={set("companyName")} onBlur={() => handleBlur("companyName")} className={fieldClass("companyName")} />
+              {touched.companyName && fieldErrors.companyName && <p className="text-red-500 text-xs mt-1">{fieldErrors.companyName}</p>}
             </div>
             <div className="col-span-2">
               <label className="block text-xs font-semibold text-gray-500 mb-1">{l.contactName}</label>
-              <input placeholder={l.contactNamePh} value={form.contactName} onChange={set("contactName")} required className={inp} />
+              <input placeholder={l.contactNamePh} value={form.contactName} onChange={set("contactName")} onBlur={() => handleBlur("contactName")} className={fieldClass("contactName")} />
+              {touched.contactName && fieldErrors.contactName && <p className="text-red-500 text-xs mt-1">{fieldErrors.contactName}</p>}
             </div>
 
             {/* Email */}
             <div className="col-span-2">
               <label className="block text-xs font-semibold text-gray-500 mb-1">{l.email}</label>
-              <input type="email" placeholder={l.emailPh} value={form.email} onChange={set("email")} required className={inp} />
+              <input type="email" placeholder={l.emailPh} value={form.email} onChange={set("email")} onBlur={() => handleBlur("email")} className={fieldClass("email")} />
+              {touched.email && fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
             </div>
 
             {/* Password + Phone */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">{l.password}</label>
-              <input type="password" placeholder={l.passwordPh} value={form.password} onChange={set("password")} required minLength={8} className={inp} />
+              <PasswordInput placeholder={l.passwordPh} value={form.password} onChange={set("password")} onBlur={() => handleBlur("password")} className={fieldClass("password")} />
+              {touched.password && fieldErrors.password && <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>}
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">{l.phone}</label>
-              <input type="tel" placeholder={l.phonePh} value={form.phone} onChange={set("phone")} className={inp} />
+              <input type="tel" inputMode="numeric" placeholder={l.phonePh} value={form.phone} onChange={setPhone} onBlur={() => handleBlur("phone")} className={fieldClass("phone")} />
+              {touched.phone && fieldErrors.phone && <p className="text-red-500 text-xs mt-1">{fieldErrors.phone}</p>}
             </div>
 
             {/* GST + Website */}
@@ -139,7 +173,8 @@ export default function AdvertiserRegisterPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">{l.website}</label>
-              <input type="url" placeholder={l.websitePh} value={form.website} onChange={set("website")} className={inp} />
+              <input type="url" placeholder={l.websitePh} value={form.website} onChange={set("website")} onBlur={() => handleBlur("website")} className={fieldClass("website")} />
+              {touched.website && fieldErrors.website && <p className="text-red-500 text-xs mt-1">{fieldErrors.website}</p>}
             </div>
 
           </div>

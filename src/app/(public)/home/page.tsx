@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import { NewsCard } from "@/components/NewsCard";
@@ -9,6 +9,7 @@ import { CategoryBlock } from "@/components/CategoryBlock";
 import { LocalNewsBlock } from "@/components/LocalNewsBlock";
 import { ScrollCarousel } from "@/components/ScrollCarousel";
 import { RashifalStrip } from "@/components/RashifalStrip";
+import { HeroSkeleton, BlockSkeleton } from "@/components/SectionSkeleton";
 import Link from "next/link";
 import { Play, ImageIcon, Flame } from "lucide-react";
 import { SidebarAd } from "@/components/AdUnit";
@@ -22,11 +23,13 @@ export default function HomePage() {
   const [videos, setVideos] = useState<any[]>([]);
   const [galleries, setGalleries] = useState<any[]>([]);
   const [stories, setStories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     setFeatured([]); setLatest([]); setTrending([]); setVideos([]); setGalleries([]); setStories([]);
     publicApi.articles({ isFeatured: "true", limit: 5 }).then((r) => setFeatured(r.data.items)).catch(() => {});
-    publicApi.articles({ limit: 8, page: 1 }).then((r) => setLatest(r.data.items)).catch(() => {});
+    publicApi.articles({ limit: 8, page: 1 }).then((r) => setLatest(r.data.items)).catch(() => {}).finally(() => setLoading(false));
     publicApi.articles({ isTrending: "true", limit: 8 }).then((r) => setTrending(r.data.items)).catch(() => {});
     publicApi.categories().then((r) => setCategories(r.data.filter((c: any) => c.showInNav))).catch(() => {});
     publicApi.articles({ contentType: "video", limit: 10 }).then((r) => setVideos(r.data.items)).catch(() => {});
@@ -52,41 +55,81 @@ export default function HomePage() {
     return { heroArticle: hero, sideArticles: side, heroUsedIds: usedIds };
   }, [featured, latest]);
 
-  const latestExcludingHero = useMemo(
-    () => latest.filter((a) => !heroUsedIds.has(a.id)),
-    [latest, heroUsedIds]
+  // Trending is a distinct pool (isTrending=true) but can legitimately overlap
+  // with whatever the hero/side panel already picked from featured/latest —
+  // skip anything already shown there.
+  const visibleTrending = useMemo(
+    () => trending.filter((a) => !heroUsedIds.has(a.id)),
+    [trending, heroUsedIds]
   );
 
+  const latestExcludingHero = useMemo(() => {
+    const trendingIds = new Set(visibleTrending.map((a) => a.id));
+    return latest.filter((a) => !heroUsedIds.has(a.id) && !trendingIds.has(a.id));
+  }, [latest, heroUsedIds, visibleTrending]);
+
+  // Shared, mutable set of article ids already shown on the page (hero, side panel,
+  // trending). Each CategoryBlock filters against it and adds its own picks, so the
+  // same article never appears twice across the stacked category sections below.
+  // This must stay ONE stable Set instance for the page's lifetime: CategoryBlock
+  // mutates it directly, and re-creating it (e.g. via useMemo keyed on async data)
+  // would wipe out picks earlier blocks already registered.
+  const categoryShownIdsRef = useRef<Set<number>>(new Set());
+  for (const id of heroUsedIds) categoryShownIdsRef.current.add(Number(id));
+  for (const a of visibleTrending) categoryShownIdsRef.current.add(a.id);
+  const categoryShownIds = categoryShownIdsRef.current;
+
+  // The video carousel fetches independently of hero/trending/latest, so an
+  // article that's e.g. both a video and trending would otherwise render
+  // twice. Filter it against everything already placed above it. (Plain
+  // filter, not useMemo — categoryShownIds is a mutable ref, not reactive
+  // state, so it can't be trusted as a memo dependency.)
+  const visibleVideos = videos.filter((v) => !categoryShownIds.has(v.id));
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <HeroSkeleton />
+        <BlockSkeleton />
+        <BlockSkeleton />
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* HERO: big feature + side items (pads from latest news when featured is short, so the panel never looks sparse) */}
-      {heroArticle && (
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+      {heroArticle ? (
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 items-start">
           <div className="lg:col-span-2">
             <NewsCard {...heroArticle} size="lg" />
           </div>
           {sideArticles.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 bg-white rounded-xl border p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 bg-white rounded-xl border p-3 sm:p-4">
               {sideArticles.map((a) => (
                 <CompactNewsCard key={a.id} {...a} />
               ))}
             </div>
           )}
         </section>
+      ) : (
+        <section className="bg-white rounded-xl border p-10 text-center">
+          <p className="text-sm text-gray-400">{isHindi ? "अभी कोई खबर उपलब्ध नहीं है।" : "No news available right now."}</p>
+        </section>
       )}
 
       {/* TRENDING — full width, numbered grid */}
-      {trending.length > 0 && (
+      {visibleTrending.length > 0 && (
         <section className="bg-white rounded-xl border p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-4 pb-2 border-b border-(--line)">
             <Flame size={18} className="text-brand" />
             <h2 className="text-lg font-black text-gray-900">{isHindi ? "ट्रेंडिंग" : "Trending"}</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-            {trending.map((a, i) => (
-              <Link key={a.id} href={`/article/${a.slug}`} className="flex items-start gap-2.5 group">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5">
+            {visibleTrending.map((a, i) => (
+              <Link key={a.id} href={`/article/${a.slug}`} className="flex items-start gap-2.5 group rounded-lg p-1 -m-1 outline-none focus-visible:ring-2 focus-visible:ring-brand/40 hover:bg-gray-50 transition-colors">
                 <span className="text-brand font-black text-lg leading-none shrink-0 w-6 text-center">{i + 1}</span>
-                <p className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-brand transition">
+                <p className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-brand transition-colors">
                   {isHindi ? (a.titleHindi || a.title) : a.title}
                 </p>
               </Link>
@@ -102,7 +145,7 @@ export default function HomePage() {
             <div className="w-1 h-6 rounded-full bg-brand" />
             <h2 className="text-lg font-black text-gray-900">{isHindi ? "ताज़ा खबरें" : "Latest News"}</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3.5">
             {latestExcludingHero.map((a) => <CompactNewsCard key={a.id} {...a} />)}
           </div>
         </section>
@@ -121,15 +164,16 @@ export default function HomePage() {
             categoryName={c.name}
             categoryNameHindi={c.nameHindi}
             categoryColor={c.color}
+            shownArticleIds={categoryShownIds}
           />
           {(i + 1) % 4 === 0 && <SidebarAd position="middle" className="bg-white rounded-xl border p-3" />}
         </Fragment>
       ))}
 
       {/* VIDEO CAROUSEL */}
-      {videos.length > 0 && (
+      {visibleVideos.length > 0 && (
         <ScrollCarousel title={isHindi ? "वीडियो न्यूज़" : "Video News"} viewMoreHref="/video" viewMoreLabel={isHindi ? "और देखें" : "View More"}>
-          {videos.map((v) => (
+          {visibleVideos.map((v) => (
             <Link key={v.id} href={`/article/${v.slug}`} className="group shrink-0 w-64">
               <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
                 {v.thumbnailUrl ? (

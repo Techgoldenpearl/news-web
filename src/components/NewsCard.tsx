@@ -31,17 +31,18 @@ export function NewsCard({ title, titleHindi, slug, summary, summaryHindi, thumb
   const displayCategory = isHindi ? (categoryNameHindi || categoryName) : categoryName;
 
   return (
-    <Link href={`/article/${slug}`} className="group block h-full">
-      <div className="bg-white rounded-lg overflow-hidden shadow-sm border hover:shadow-md transition h-full flex flex-col">
+    <Link href={`/article/${slug}`} className="group block h-full outline-none">
+      <div className="bg-white rounded-xl overflow-hidden shadow-sm border hover:shadow-lg hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-brand/40 transition-all duration-200 h-full flex flex-col">
         <div className={`relative overflow-hidden bg-gray-100 shrink-0 ${size === "lg" ? "aspect-[16/9]" : size === "sm" ? "aspect-[4/3]" : "aspect-[3/2]"}`}>
           {thumbnailUrl ? (
-            <img src={thumbnailUrl} alt={displayTitle}
+            <img src={thumbnailUrl} alt={displayTitle} loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
               <span className="text-gray-400 text-xs font-medium px-2 text-center line-clamp-3">{displayCategory || (isHindi ? "समाचार" : "News")}</span>
             </div>
           )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           {contentType === "video" && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-10 h-10 bg-black/50 rounded-full flex items-center justify-center group-hover:bg-black/70 transition">
@@ -61,15 +62,15 @@ export function NewsCard({ title, titleHindi, slug, summary, summaryHindi, thumb
             </span>
           )}
         </div>
-        <div className="p-3 flex flex-col flex-1">
-          <h3 className={`font-semibold text-gray-900 group-hover:text-brand transition line-clamp-2 ${size === "lg" ? "text-xl leading-tight" : size === "sm" ? "text-sm leading-snug" : "text-base leading-snug"}`}>
+        <div className={`flex flex-col flex-1 ${size === "lg" ? "p-4" : "p-3"}`}>
+          <h3 className={`font-bold text-gray-900 group-hover:text-brand transition-colors line-clamp-2 ${size === "lg" ? "text-xl leading-snug" : size === "sm" ? "text-sm leading-snug" : "text-base leading-snug"}`}>
             {displayTitle}
           </h3>
           {displaySummary && size !== "sm" && (
-            <p className="text-gray-500 text-sm mt-1 line-clamp-2">{displaySummary}</p>
+            <p className="text-gray-500 text-sm mt-1.5 line-clamp-2 leading-relaxed">{displaySummary}</p>
           )}
           {publishedAt && (
-            <p className="text-xs text-gray-400 mt-auto pt-2">{format(new Date(publishedAt), "dd MMM yyyy, h:mm a")}</p>
+            <p className="text-xs text-gray-400 mt-auto pt-3">{format(new Date(publishedAt), "dd MMM yyyy, h:mm a")}</p>
           )}
         </div>
       </div>

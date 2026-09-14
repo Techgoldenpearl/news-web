@@ -17,6 +17,8 @@ export const reporterAuthApi = {
   updateProfile: (data: any) => reporterApi.put("/profile", data),
   changePassword: (currentPassword: string, newPassword: string) =>
     reporterApi.put("/change-password", { currentPassword, newPassword }),
+  uploadPhoto: (base64: string, fileName: string, mimeType: string) =>
+    reporterApi.post("/photo", { base64, fileName, mimeType }),
 };
 
 export const reporterSubmissionsApi = {

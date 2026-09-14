@@ -90,6 +90,14 @@ export const authApi = {
   me: () => api.get("/auth/me"),
   logout: () => api.post("/auth/logout"),
   updateProfile: (data: any) => api.put("/auth/profile", data),
+  forgotPassword: (email: string) => api.post("/auth/forgot-password", { email }),
+  verifyOtp: (email: string, otp: string) => api.post("/auth/verify-otp", { email, otp }),
+  resetPassword: (resetToken: string, newPassword: string) =>
+    api.post("/auth/reset-password", { resetToken, newPassword }),
+  uploadAvatar: (base64: string, fileName: string, mimeType: string) =>
+    api.post("/auth/avatar", { base64, fileName, mimeType }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api.put("/auth/change-password", { currentPassword, newPassword }),
 };
 
 export const customerApi = {
