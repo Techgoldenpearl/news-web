@@ -40,14 +40,16 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
     const applyLocationResponse = (data: any) => {
       if (!data?.state || !data?.city) return false;
-      setLocation({
+      const loc: SelectedLocation = {
         stateSlug: data.state.slug,
         stateName: data.state.name,
         stateNameHindi: data.state.nameHindi,
         citySlug: data.city.slug,
         cityName: data.city.name,
         cityNameHindi: data.city.nameHindi,
-      });
+      };
+      setLocationState(loc);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(loc));
       return true;
     };
 

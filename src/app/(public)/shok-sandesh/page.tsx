@@ -76,7 +76,7 @@ export default function ShokSandeshPage() {
   }, [items, timeFilter, ageFilter, nameSort]);
 
   const activeFilters: { key: string; label: string; clear: () => void }[] = [];
-  if (type) activeFilters.push({ key: "type", label: isHindi ? TYPES.find((t) => t.value === type)?.labelHi! : TYPES.find((t) => t.value === type)?.label!, clear: () => setType("") });
+  if (type) activeFilters.push({ key: "type", label: (isHindi ? TYPES.find((t) => t.value === type)?.labelHi : TYPES.find((t) => t.value === type)?.label) ?? type, clear: () => setType("") });
   if (city !== "all") activeFilters.push({ key: "city", label: city, clear: () => setCity("all") });
   if (timeFilter !== "all") activeFilters.push({ key: "time", label: timeFilter, clear: () => setTimeFilter("all") });
   if (ageFilter !== "all") activeFilters.push({ key: "age", label: ageFilter, clear: () => setAgeFilter("all") });
