@@ -24,7 +24,7 @@ export function ReporterHeader() {
 
   return (
     <header className="bg-white border-b sticky top-0 z-50">
-      <div className="max-w-5xl mx-auto px-4">
+      <div className="max-w-[1400px] mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           <Link href="/patrakar/dashboard" className="flex items-center gap-2">
             <div className="w-9 h-9 bg-brand-tint rounded-xl flex items-center justify-center">

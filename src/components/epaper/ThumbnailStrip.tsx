@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 interface Page {
   id: number;
   pageNumber: number;
@@ -30,9 +32,9 @@ export default function ThumbnailStrip({ pages, pageIndex, onSelect }: Thumbnail
           <button
             key={p.id}
             onClick={() => onSelect(i)}
-            className={`flex-shrink-0 w-16 aspect-[3/4] rounded-lg overflow-hidden border-2 ${i === pageIndex ? "border-brand" : "border-transparent"}`}
+            className={`relative flex-shrink-0 w-16 aspect-[3/4] rounded-lg overflow-hidden border-2 ${i === pageIndex ? "border-brand" : "border-transparent"}`}
           >
-            <img src={p.thumbnailUrl || p.imageUrl} alt={`Page ${p.pageNumber}`} className="w-full h-full object-cover" />
+            <Image src={p.thumbnailUrl || p.imageUrl} alt={`Page ${p.pageNumber}`} fill sizes="64px" className="object-cover" />
           </button>
         ))}
       </div>

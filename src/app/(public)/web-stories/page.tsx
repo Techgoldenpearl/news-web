@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import Link from "next/link";
@@ -19,7 +20,7 @@ export default function WebStoriesPage() {
           <Link key={s.id} href={`/web-stories/${s.slug}`} className="group">
             <div className="relative aspect-[9/16] rounded-xl overflow-hidden shadow-md bg-gray-100">
               {s.thumbnailUrl ? (
-                <img src={s.thumbnailUrl} alt={isHindi ? (s.titleHindi || s.title) : s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <Image src={s.thumbnailUrl} alt={isHindi ? (s.titleHindi || s.title) : s.title} fill sizes="(max-width: 768px) 33vw, 20vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
               )}

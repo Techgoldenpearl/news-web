@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { AdvertiserGate } from "@/components/advertiser/AdvertiserGate";
 import { useAdvertiserAuth } from "@/lib/advertiser-auth-context";
 import { advertiserRequestsApi } from "@/lib/advertiser-api";
@@ -67,7 +68,11 @@ function DashboardContent() {
       <div className="bg-white rounded-xl border divide-y">
         {requests.map((r) => (
           <div key={r.id} className="p-4 flex items-start gap-3">
-            {r.imageUrl && <img src={r.imageUrl} alt={r.name} className="w-16 h-16 rounded-lg object-cover shrink-0 bg-gray-100" />}
+            {r.imageUrl && (
+              <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100">
+                <Image src={r.imageUrl} alt={r.name} fill sizes="64px" className="object-cover" />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-xs px-2 py-0.5 rounded font-medium ${STATUS_LABEL[r.status]?.cls || "bg-gray-100 text-gray-600"}`}>

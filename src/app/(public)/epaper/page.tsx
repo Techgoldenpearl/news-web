@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import Link from "next/link";
@@ -18,19 +19,25 @@ function issueHref(issue: any) {
 }
 
 export default function EpaperPage() {
-  const { isHindi } = useSite();
+  const { isHindi, loading: siteLoading } = useSite();
   const [issues, setIssues] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   useEffect(() => {
+    // The backend's date-scoped epaper route 404s outright without a
+    // resolved X-Site-ID (unlike most endpoints, which degrade
+    // gracefully) — wait for the site to resolve first, same guard
+    // CategoryView uses, so this fetch never races SiteProvider's
+    // initial X-Site-ID resolution.
+    if (siteLoading) return;
     setLoading(true);
     const dateIso = selectedDate.toISOString().slice(0, 10);
     publicApi.epaperEditionsForDate(dateIso)
       .then((r) => setIssues(r.data.items || []))
       .catch(() => setIssues([]))
       .finally(() => setLoading(false));
-  }, [selectedDate]);
+  }, [selectedDate, siteLoading]);
 
   const handleShare = async (e: React.MouseEvent, issue: any) => {
     e.preventDefault();
@@ -44,44 +51,54 @@ export default function EpaperPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <h1 className="text-3xl font-bold">{isHindi ? "ई-पेपर" : "E-Paper"}</h1>
-        <EpaperCalendar edition="" selectedDate={selectedDate} />
-      </div>
+    <div>
+      <div className="bg-panel border border-line rounded-lg overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-line">
+          <span className="w-[42px] h-[42px] rounded-full bg-[#efede8] grid place-items-center text-[19px] shrink-0"><Newspaper size={19} /></span>
+          <h2 className="font-serif text-xl leading-tight">{isHindi ? "आज का ई-पेपर" : "Today's E-Paper"}</h2>
+          <div className="ml-auto"><EpaperCalendar edition="" selectedDate={selectedDate} /></div>
+        </div>
+        <div className="px-5 pt-3.5">
+          <span className="text-tx-3 text-[13px]">
+            {issues.length > 0 && `· ${isHindi ? `कुल ${issues.length} संस्करण` : `${issues.length} editions`}`}
+          </span>
+        </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-brand" />
-        </div>
-      ) : issues.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
-          {issues.map((issue) => (
-            <Link key={issue.id} href={issueHref(issue)} className="group block">
-              <p className="text-sm font-semibold mb-1.5 truncate">{issue.edition || (isHindi ? "राष्ट्रीय" : "National")}</p>
-              <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-sm bg-gray-100 border">
-                {issue.coverImageUrl ? (
-                  <img src={issue.coverImageUrl} alt={issue.edition} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                    <Newspaper size={32} className="text-gray-300" />
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center justify-between mt-1.5">
-                <span className="text-xs text-gray-500">
-                  {new Date(issue.issueDate).toLocaleDateString(isHindi ? "hi-IN" : "en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                </span>
-                <button onClick={(e) => handleShare(e, issue)} className="text-gray-400 hover:text-brand p-1">
-                  <Share2 size={14} />
-                </button>
-              </div>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-gray-400 py-12">{isHindi ? "इस तारीख के लिए कोई ई-पेपर उपलब्ध नहीं" : "No e-paper issues available for this date"}</p>
-      )}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-line border-t-brand" />
+          </div>
+        ) : issues.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5">
+            {issues.map((issue) => (
+              <Link key={issue.id} href={issueHref(issue)} className="group block relative">
+                <div className="relative aspect-[3/4] rounded-md overflow-hidden bg-panel-2 border border-line">
+                  {issue.coverImageUrl ? (
+                    <Image src={issue.coverImageUrl} alt={issue.edition} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-panel-2 to-line">
+                      <Newspaper size={32} className="text-tx-3" />
+                    </div>
+                  )}
+                  <span className="absolute left-2 bottom-2 bg-black/78 text-white text-xs px-2.5 py-0.5 rounded-md">
+                    {issue.edition || (isHindi ? "राष्ट्रीय" : "National")}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-xs text-tx-3">
+                    {new Date(issue.issueDate).toLocaleDateString(isHindi ? "hi-IN" : "en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                  </span>
+                  <button onClick={(e) => handleShare(e, issue)} className="text-tx-3 hover:text-brand p-1">
+                    <Share2 size={14} />
+                  </button>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-tx-3 py-12">{isHindi ? "इस तारीख के लिए कोई ई-पेपर उपलब्ध नहीं" : "No e-paper issues available for this date"}</p>
+        )}
+      </div>
     </div>
   );
 }

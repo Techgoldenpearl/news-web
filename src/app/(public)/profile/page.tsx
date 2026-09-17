@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { useSite } from "@/lib/site-context";
 import { authApi } from "@/lib/api";
@@ -14,20 +15,20 @@ const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
 function ProfileSkeleton() {
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 animate-pulse">
-      <div className="h-7 w-40 bg-gray-200 rounded mb-6" />
-      <div className="bg-white rounded-2xl border p-6 mb-6">
+    <div className="max-w-2xl animate-pulse">
+      <div className="h-7 w-40 bg-panel-2 rounded mb-6" />
+      <div className="bg-panel rounded-lg border-line border p-6 mb-6">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-20 h-20 rounded-full bg-gray-200" />
+          <div className="w-20 h-20 rounded-full bg-panel-2" />
           <div className="space-y-2">
-            <div className="h-5 w-32 bg-gray-200 rounded" />
-            <div className="h-4 w-44 bg-gray-200 rounded" />
+            <div className="h-5 w-32 bg-panel-2 rounded" />
+            <div className="h-4 w-44 bg-panel-2 rounded" />
           </div>
         </div>
         <div className="space-y-4">
-          <div className="h-11 bg-gray-100 rounded-xl" />
-          <div className="h-11 bg-gray-100 rounded-xl" />
-          <div className="h-20 bg-gray-100 rounded-xl" />
+          <div className="h-11 bg-panel-2 rounded-xl" />
+          <div className="h-11 bg-panel-2 rounded-xl" />
+          <div className="h-20 bg-panel-2 rounded-xl" />
         </div>
       </div>
     </div>
@@ -68,10 +69,10 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="max-w-md mx-auto px-4 py-12 text-center">
-        <User size={48} className="text-gray-300 mx-auto mb-4" />
+      <div className="max-w-md mx-auto py-12 text-center">
+        <User size={48} className="text-tx-3 mx-auto mb-4" />
         <h1 className="text-2xl font-bold mb-2">{t("Your Profile", "आपकी प्रोफ़ाइल")}</h1>
-        <p className="text-gray-500 mb-4">{t("Login to manage your profile", "अपनी प्रोफ़ाइल प्रबंधित करने के लिए लॉगिन करें")}</p>
+        <p className="text-tx-3 mb-4">{t("Login to manage your profile", "अपनी प्रोफ़ाइल प्रबंधित करने के लिए लॉगिन करें")}</p>
         <Link href="/login" className="inline-block bg-brand text-white px-6 py-2.5 rounded-xl hover:opacity-90 transition">{t("Login", "लॉगिन")}</Link>
       </div>
     );
@@ -192,10 +193,10 @@ export default function ProfilePage() {
     }`;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-2xl">
       <h1 className="text-2xl font-bold mb-6">{t("My Profile", "मेरी प्रोफ़ाइल")}</h1>
 
-      <div className="bg-white rounded-2xl border p-6 mb-6">
+      <div className="bg-panel rounded-lg border-line border p-6 mb-6">
         <div className="flex items-center gap-4 mb-6">
           <button
             type="button"
@@ -205,10 +206,9 @@ export default function ProfilePage() {
             aria-label={t("Change profile photo", "प्रोफ़ाइल फ़ोटो बदलें")}
           >
             {user.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatarUrl} alt={user.name} className="w-20 h-20 rounded-full object-cover" />
+              <Image src={user.avatarUrl} alt={user.name} fill sizes="80px" className="rounded-full object-cover" />
             ) : (
-              <div className="w-20 h-20 bg-brand-tint rounded-full flex items-center justify-center text-3xl font-bold text-brand">
+              <div className="w-20 h-20 bg-brand-soft rounded-full flex items-center justify-center text-3xl font-bold text-brand">
                 {user.name?.[0]?.toUpperCase() || "U"}
               </div>
             )}
@@ -223,19 +223,19 @@ export default function ProfilePage() {
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
           <div>
             <h2 className="text-xl font-bold">{user.name}</h2>
-            <p className="text-gray-500 text-sm">{user.email}</p>
+            <p className="text-tx-3 text-sm">{user.email}</p>
           </div>
         </div>
 
         <form onSubmit={handleSave} noValidate className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("Name", "नाम")}</label>
+            <label className="block text-sm font-medium text-tx-2 mb-1">{t("Name", "नाम")}</label>
             <input value={form.name} onChange={(e) => handleChange("name", e.target.value)} onBlur={() => handleBlur("name")}
               className={fieldClass("name")} />
             {touched.name && fieldErrors.name && <p className="text-red-500 text-xs mt-1">{fieldErrors.name}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("Phone", "फ़ोन")}</label>
+            <label className="block text-sm font-medium text-tx-2 mb-1">{t("Phone", "फ़ोन")}</label>
             <input value={form.phone} inputMode="numeric"
               onChange={(e) => handleChange("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
               onBlur={() => handleBlur("phone")}
@@ -243,14 +243,14 @@ export default function ProfilePage() {
             {touched.phone && fieldErrors.phone && <p className="text-red-500 text-xs mt-1">{fieldErrors.phone}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("Bio", "परिचय")}</label>
+            <label className="block text-sm font-medium text-tx-2 mb-1">{t("Bio", "परिचय")}</label>
             <textarea value={form.bio} onChange={(e) => handleChange("bio", e.target.value)} onBlur={() => handleBlur("bio")}
               rows={3} maxLength={2000} className={fieldClass("bio")} />
             <div className="flex justify-between mt-1">
               {touched.bio && fieldErrors.bio ? (
                 <p className="text-red-500 text-xs">{fieldErrors.bio}</p>
               ) : <span />}
-              <p className="text-gray-400 text-xs">{form.bio.length}/2000</p>
+              <p className="text-tx-3 text-xs">{form.bio.length}/2000</p>
             </div>
           </div>
           <button type="submit" disabled={saving || !isDirty}
@@ -261,36 +261,36 @@ export default function ProfilePage() {
         </form>
       </div>
 
-      <div className="bg-white rounded-2xl border mb-6 overflow-hidden">
+      <div className="bg-panel rounded-lg border-line border mb-6 overflow-hidden">
         <button
           type="button"
           onClick={() => setShowPasswordSection((s) => !s)}
           className="w-full flex items-center justify-between p-6 text-left"
         >
           <span className="flex items-center gap-3 font-medium">
-            <span className="p-2 bg-gray-100 rounded-lg"><KeyRound size={18} className="text-gray-600" /></span>
+            <span className="p-2 bg-panel-2 rounded-lg"><KeyRound size={18} className="text-gray-600" /></span>
             {t("Change Password", "पासवर्ड बदलें")}
           </span>
-          <ChevronDown size={18} className={`text-gray-400 transition-transform ${showPasswordSection ? "rotate-180" : ""}`} />
+          <ChevronDown size={18} className={`text-tx-3 transition-transform ${showPasswordSection ? "rotate-180" : ""}`} />
         </button>
         {showPasswordSection && (
           <form onSubmit={handleChangePassword} noValidate className="px-6 pb-6 space-y-4 border-t pt-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("Current Password", "वर्तमान पासवर्ड")}</label>
+              <label className="block text-sm font-medium text-tx-2 mb-1">{t("Current Password", "वर्तमान पासवर्ड")}</label>
               <PasswordInput value={pwForm.currentPassword}
                 onChange={(e) => handlePwChange("currentPassword", e.target.value)} onBlur={() => handlePwBlur("currentPassword")}
                 className={pwFieldClass("currentPassword")} />
               {pwTouched.currentPassword && pwErrors.currentPassword && <p className="text-red-500 text-xs mt-1">{pwErrors.currentPassword}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("New Password", "नया पासवर्ड")}</label>
+              <label className="block text-sm font-medium text-tx-2 mb-1">{t("New Password", "नया पासवर्ड")}</label>
               <PasswordInput value={pwForm.newPassword}
                 onChange={(e) => handlePwChange("newPassword", e.target.value)} onBlur={() => handlePwBlur("newPassword")}
                 className={pwFieldClass("newPassword")} />
               {pwTouched.newPassword && pwErrors.newPassword && <p className="text-red-500 text-xs mt-1">{pwErrors.newPassword}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("Confirm New Password", "नए पासवर्ड की पुष्टि करें")}</label>
+              <label className="block text-sm font-medium text-tx-2 mb-1">{t("Confirm New Password", "नए पासवर्ड की पुष्टि करें")}</label>
               <PasswordInput value={pwForm.confirmNewPassword}
                 onChange={(e) => handlePwChange("confirmNewPassword", e.target.value)} onBlur={() => handlePwBlur("confirmNewPassword")}
                 className={pwFieldClass("confirmNewPassword")} />
@@ -306,15 +306,15 @@ export default function ProfilePage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Link href="/bookmarks" className="flex items-center gap-3 bg-white rounded-xl border p-4 hover:shadow-md hover:border-brand/30 transition">
+        <Link href="/bookmarks" className="flex items-center gap-3 bg-panel rounded-lg border-line border p-4 hover:shadow-md hover:border-brand/30 transition">
           <div className="p-2.5 bg-blue-100 rounded-lg"><Bookmark size={18} className="text-blue-600" /></div>
           <span className="font-medium">{t("Bookmarks", "बुकमार्क")}</span>
         </Link>
-        <Link href="/history" className="flex items-center gap-3 bg-white rounded-xl border p-4 hover:shadow-md hover:border-brand/30 transition">
+        <Link href="/history" className="flex items-center gap-3 bg-panel rounded-lg border-line border p-4 hover:shadow-md hover:border-brand/30 transition">
           <div className="p-2.5 bg-purple-100 rounded-lg"><Clock size={18} className="text-purple-600" /></div>
           <span className="font-medium">{t("History", "इतिहास")}</span>
         </Link>
-        <Link href="/membership" className="flex items-center gap-3 bg-white rounded-xl border p-4 hover:shadow-md hover:border-brand/30 transition">
+        <Link href="/membership" className="flex items-center gap-3 bg-panel rounded-lg border-line border p-4 hover:shadow-md hover:border-brand/30 transition">
           <div className="p-2.5 bg-amber-100 rounded-lg"><CreditCard size={18} className="text-amber-600" /></div>
           <span className="font-medium">{t("Membership", "सदस्यता")}</span>
         </Link>

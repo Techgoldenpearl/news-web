@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ReporterGate } from "@/components/reporter/ReporterGate";
 import { reporterSubmissionsApi } from "@/lib/reporter-api";
 import { publicApi } from "@/lib/api";
+import { dedupeCategories } from "@/lib/categories";
 import { toast } from "sonner";
 
 function NewSubmissionForm() {
@@ -17,7 +18,7 @@ function NewSubmissionForm() {
   });
 
   useEffect(() => {
-    publicApi.categories().then((r) => setCategories(r.data)).catch(() => {});
+    publicApi.categories().then((r) => setCategories(dedupeCategories(r.data))).catch(() => {});
   }, []);
 
   const submit = async (isDraft: boolean) => {

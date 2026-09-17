@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import Link from "next/link";
@@ -61,14 +62,17 @@ export default function WebStoryDetailPage() {
           {/* Slide */}
           <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-gray-900">
             {slide?.imageUrl && (
-              <img src={slide.imageUrl} alt={slide.caption || title} className="w-full h-full object-cover" />
+              <Image src={slide.imageUrl} alt={slide.headline || title} fill priority sizes="(max-width: 768px) 100vw, 500px" className="object-cover" />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-            {slide?.caption && (
+            {(slide?.headline || slide?.description) && (
               <div className="absolute bottom-0 left-0 right-0 p-6">
-                <p className="text-white font-semibold text-lg leading-snug">
-                  {isHindi ? (slide.captionHindi || slide.caption) : slide.caption}
-                </p>
+                {slide?.headline && (
+                  <p className="text-white font-semibold text-lg leading-snug">{slide.headline}</p>
+                )}
+                {slide?.description && (
+                  <p className="text-white/85 text-sm leading-snug mt-1.5">{slide.description}</p>
+                )}
               </div>
             )}
 

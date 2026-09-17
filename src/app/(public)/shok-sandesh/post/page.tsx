@@ -72,10 +72,10 @@ export default function PostShokSandeshPage() {
   if (loading || !user) return null;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-2xl">
       <h1 className="text-2xl font-bold mb-6">{isHindi ? "शोक संदेश जमा करें" : "Submit an Obituary"}</h1>
 
-      <form onSubmit={submit} className="bg-white rounded-xl border p-6 space-y-4">
+      <form onSubmit={submit} className="bg-panel rounded-lg border-line border p-6 space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">{isHindi ? "प्रकार *" : "Type *"}</label>
           <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}

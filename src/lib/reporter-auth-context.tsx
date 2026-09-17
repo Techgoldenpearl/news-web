@@ -2,28 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { reporterAuthApi } from "./reporter-api";
-
-interface Reporter {
-  id: number;
-  employeeId: string;
-  name: string;
-  nameHindi?: string;
-  email: string;
-  phone?: string;
-  photoUrl?: string;
-  designation?: string;
-  beat?: string;
-  city?: string;
-  state?: string;
-  status: "pending" | "active" | "suspended" | "rejected";
-  bio?: string;
-  twitterHandle?: string;
-  facebookUrl?: string;
-  idCardExpiry?: string;
-  submissionsCount?: number;
-  approvedCount?: number;
-  totalViewsCount?: number;
-}
+import type { Reporter } from "@/types";
 
 interface ReporterAuthContextType {
   reporter: Reporter | null;

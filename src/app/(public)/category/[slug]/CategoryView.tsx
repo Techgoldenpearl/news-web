@@ -1,12 +1,13 @@
 "use client";
 
-import { Fragment, useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { publicApi } from "@/lib/api";
 import { NewsCard } from "@/components/NewsCard";
-import { CategoryTopAd } from "@/components/AdUnit";
-import { AdSlot } from "@/components/AdSlot";
 import { useSite } from "@/lib/site-context";
+import { ListPageShell, type TimeFilter, type TypeFilter, type SortOrder } from "@/components/ListPageShell";
+
+const PER_PAGE = 12;
 
 export default function CategoryView() {
   const { slug } = useParams();
@@ -16,8 +17,12 @@ export default function CategoryView() {
   const [articles, setArticles] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const observerRef = useRef<HTMLDivElement>(null);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [sort, setSort] = useState<SortOrder>("new");
 
   useEffect(() => {
     // Wait for the site to resolve first — otherwise this fires before
@@ -26,90 +31,73 @@ export default function CategoryView() {
     if (slug && !siteLoading) {
       setCategory(null);
       setCategoryChecked(false);
-      setArticles([]);
-      setPage(1);
-      setHasMore(false);
       publicApi.category(slug as string)
         .then((r) => setCategory(r.data))
         .catch(() => setCategory(null))
         .finally(() => setCategoryChecked(true));
-      publicApi.articles({ categorySlug: slug, page: 1, limit: 12 }).then((r) => {
-        setArticles(r.data.items);
-        setHasMore(r.data.hasMore);
-      }).catch(() => {});
     }
   }, [slug, siteLoading, site?.id]);
 
-  const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore || !slug) return;
-    setLoadingMore(true);
-    const nextPage = page + 1;
-    try {
-      const r = await publicApi.articles({ categorySlug: slug, page: nextPage, limit: 12 });
-      setArticles((prev) => [...prev, ...r.data.items]);
-      setHasMore(r.data.hasMore);
-      setPage(nextPage);
-    } catch {}
-    setLoadingMore(false);
-  }, [slug, page, loadingMore, hasMore]);
-
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting) loadMore(); },
-      { threshold: 0.1 }
-    );
-    if (observerRef.current) observer.observe(observerRef.current);
-    return () => observer.disconnect();
-  }, [loadMore]);
+    if (!slug || siteLoading) return;
+    setLoading(true);
+    // sort is supported server-side (categorySlug/page/limit/sort). range
+    // and hasThumbnail are NOT — the backend silently ignores them — so
+    // time/type filters still apply client-side below, over just the
+    // current page.
+    const params: Record<string, any> = { categorySlug: slug, page, limit: PER_PAGE };
+    if (sort === "read") params.sort = "views";
+    else if (sort === "old") params.sort = "oldest";
+    publicApi.articles(params)
+      .then((r) => { setArticles(r.data.items || []); setHasMore(!!r.data.hasMore); setTotal(r.data.total ?? 0); })
+      .catch(() => setArticles([]))
+      .finally(() => setLoading(false));
+  }, [slug, siteLoading, site?.id, page, sort, timeFilter, typeFilter]);
+
+  // time/type filters have no backend support (range/hasThumbnail are
+  // silently ignored server-side) — applied client-side over the current
+  // page only, same compromise the other list pages make for this.
+  const filtered = useMemo(() => {
+    return articles.filter((a) => {
+      if (typeFilter === "photo" && !a.thumbnailUrl) return false;
+      if (typeFilter === "text" && a.thumbnailUrl) return false;
+      if (timeFilter !== "all" && a.publishedAt) {
+        const ageMs = Date.now() - new Date(a.publishedAt).getTime();
+        const maxAgeMs = timeFilter === "today" ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
+        if (ageMs > maxAgeMs) return false;
+      }
+      return true;
+    });
+  }, [articles, timeFilter, typeFilter]);
+
+  const resetToPage1 = <T,>(setter: (v: T) => void) => (v: T) => { setter(v); setPage(1); };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      {category && (
-        <div className="mb-2 pb-3 border-b-2" style={{ borderColor: category.color || "var(--accent)" }}>
-          <h1 className="text-3xl font-bold" style={{ color: category.color }}>
-            {isHindi ? (category.nameHindi || category.name) : category.name}
-          </h1>
-          {category.description && <p className="text-gray-500 mt-1">{category.description}</p>}
-        </div>
-      )}
-
+    <div>
       {categoryChecked && !category ? (
-        <p className="text-center text-gray-400 py-16">
+        <p className="text-center text-tx-3 py-16">
           {isHindi ? "यह श्रेणी इस साइट पर मौजूद नहीं है" : "This category doesn't exist on this site"}
         </p>
       ) : (
-        <>
-          <CategoryTopAd />
-
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-4">
-            <div className="lg:col-span-3">
-              <div className={`grid grid-cols-1 ${articles.length > 1 ? "md:grid-cols-2" : ""} gap-4`}>
-                {articles.map((a, i) => (
-                  <Fragment key={a.id}>
-                    <NewsCard {...a} size={articles.length === 1 ? "lg" : "md"} />
-                    {(i + 1) % 6 === 0 && (
-                      <div className="md:col-span-2">
-                        <AdSlot zone="category-top" className="w-full max-w-full" />
-                      </div>
-                    )}
-                  </Fragment>
-                ))}
-              </div>
-
-              {articles.length === 0 && <p className="text-center text-gray-400 py-12">{isHindi ? "इस श्रेणी में कोई लेख नहीं" : "No articles in this category"}</p>}
-
-              <div ref={observerRef} className="py-8 text-center">
-                {loadingMore && <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-brand mx-auto" />}
-                {!hasMore && articles.length >= 6 && <p className="text-gray-400 text-sm">{isHindi ? "और कोई लेख नहीं" : "No more articles"}</p>}
-              </div>
+        <ListPageShell
+          title={category ? (isHindi ? (category.nameHindi || category.name) : category.name) : ""}
+          subtitle={category?.description}
+          resultCount={total}
+          timeFilter={timeFilter} onTimeFilterChange={resetToPage1(setTimeFilter)}
+          typeFilter={typeFilter} onTypeFilterChange={resetToPage1(setTypeFilter)}
+          sort={sort} onSortChange={resetToPage1(setSort)}
+          onClearFilters={() => { setTimeFilter("all"); setTypeFilter("all"); setPage(1); }}
+          page={page} hasMore={hasMore} onPageChange={setPage}
+          loading={loading}
+        >
+          {filtered.length > 0 ? (
+            <div className={`grid grid-cols-1 ${filtered.length > 1 ? "sm:grid-cols-2 lg:grid-cols-3" : ""} gap-4`}>
+              {filtered.map((a) => <NewsCard key={a.id} {...a} size={filtered.length === 1 ? "lg" : "md"} />)}
             </div>
-
-            <aside className="space-y-4">
-              <AdSlot zone="sidebar-top" className="w-full" />
-              <AdSlot zone="sidebar-middle" className="w-full" />
-            </aside>
-          </div>
-        </>
+          ) : (
+            <p className="text-center text-tx-3 py-12">{isHindi ? "इस श्रेणी में कोई लेख नहीं" : "No articles in this category"}</p>
+          )}
+        </ListPageShell>
       )}
     </div>
   );

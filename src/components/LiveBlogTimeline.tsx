@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import { format } from "date-fns";
@@ -56,7 +57,8 @@ export function LiveBlogTimeline({ articleId }: { articleId: number }) {
               {isHindi ? (e.contentHindi || e.content) : e.content}
             </p>
             {e.imageUrl && (
-              <img src={e.imageUrl} alt="" className="mt-2 rounded-lg max-h-64 object-cover" />
+              <Image src={e.imageUrl} alt="" width={600} height={256} sizes="(max-width: 768px) 100vw, 600px"
+                className="mt-2 rounded-lg w-auto h-auto max-h-64 object-cover" />
             )}
           </div>
         ))}

@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 // "localhost" — that only works when both run on the same host, e.g. local dev.
 const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-async function serverFetch(path: string) {
+async function serverFetch(path: string, params?: Record<string, string | number>) {
   try {
     // Forward the visitor's actual Host so the backend's siteResolver can
     // match it against sites.domain/subdomain — without this, SSR requests
@@ -15,7 +15,8 @@ async function serverFetch(path: string) {
     const incomingHeaders = await headers();
     const host = incomingHeaders.get("x-forwarded-host") ?? incomingHeaders.get("host");
 
-    const res = await fetch(`${API_BASE}/api${path}`, {
+    const query = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : "";
+    const res = await fetch(`${API_BASE}/api${path}${query}`, {
       headers: host ? { "X-Site-Domain": host } : undefined,
       next: { revalidate: 60 },
     });
@@ -28,7 +29,12 @@ async function serverFetch(path: string) {
 
 export const serverApi = {
   site: () => serverFetch(`/sites/resolve`),
-  article: (slug: string) => serverFetch(`/articles/${slug}`),
+  // noCount=1: this call is only for generateMetadata/JSON-LD and runs on
+  // every request including bots/crawlers — it must not count as a real
+  // view. The client-side fetch in ArticleView is what counts real reads.
+  article: (slug: string) => serverFetch(`/articles/${slug}`, { noCount: 1 }),
+  articles: (params?: Record<string, string | number>) => serverFetch(`/articles`, params),
+  categories: () => serverFetch(`/categories`),
   category: (slug: string) => serverFetch(`/categories/${slug}`),
   author: (slug: string) => serverFetch(`/features/authors/${slug}`),
   topic: (slug: string) => serverFetch(`/features/topics/${slug}`),

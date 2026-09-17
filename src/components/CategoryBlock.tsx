@@ -41,11 +41,11 @@ export function CategoryBlock({ categorySlug, categoryName, categoryNameHindi, c
   const displayName = isHindi ? (categoryNameHindi || categoryName) : categoryName;
 
   return (
-    <section className="bg-white rounded-xl border p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-4 pb-2 border-b border-(--line)">
+    <section className="bg-panel border border-line rounded-lg p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-line">
         <div className="flex items-center gap-2.5">
           <div className="w-1 h-6 rounded-full" style={{ backgroundColor: categoryColor || "var(--accent)" }} />
-          <h2 className="text-lg font-black text-gray-900">{displayName}</h2>
+          <h2 className="font-serif text-xl">{displayName}</h2>
         </div>
         <Link href={`/category/${categorySlug}`} className="flex items-center gap-0.5 text-xs font-bold text-brand hover:opacity-80 transition uppercase tracking-wide shrink-0">
           {isHindi ? "और देखें" : "View More"} <ChevronRight size={14} />

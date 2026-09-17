@@ -2,20 +2,10 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { authApi } from "./api";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string;
-  bio?: string;
-  role: string;
-  avatarUrl?: string;
-  subscription?: any;
-}
+import type { ReaderUser } from "@/types";
 
 interface AuthContextType {
-  user: User | null;
+  user: ReaderUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
@@ -29,7 +19,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ReaderUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

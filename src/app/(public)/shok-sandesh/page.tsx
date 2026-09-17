@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
-import { Search, MapPin, Calendar, Share2, Heart, Plus } from "lucide-react";
-import { format } from "date-fns";
-import { hi, enIN } from "date-fns/locale";
+import { Plus, X } from "lucide-react";
 import Link from "next/link";
+import { ShokSandeshCard } from "@/components/ShokSandeshCard";
+import { PlanPickerModal } from "@/components/modals/PlanPickerModal";
+import type { State } from "@/types";
 
 const TYPES = [
   { value: "", label: "All", labelHi: "सभी" },
@@ -25,125 +26,157 @@ export default function ShokSandeshPage() {
   const [page, setPage] = useState(1);
   const [type, setType] = useState("");
   const [search, setSearch] = useState("");
+  const [states, setStates] = useState<State[]>([]);
+  const [city, setCity] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("all");
+  const [ageFilter, setAgeFilter] = useState("all");
+  const [nameSort, setNameSort] = useState("new");
+  const [payTarget, setPayTarget] = useState<any>(null);
+
+  useEffect(() => {
+    publicApi.states().then((r) => setStates(r.data || [])).catch(() => {});
+  }, []);
 
   const loadItems = () => {
-    publicApi.shokSandesh({ page, limit: 12, type: type || undefined, search: search || undefined })
-      .then((r) => { setItems(r.data.items); setTotal(r.data.total); }).catch(() => {});
+    // city/staff/payment-status params are not confirmed server-side
+    // (only page/limit/type/search were verified in use) — passed
+    // speculatively via the untyped params bag; unrecognized params are
+    // presumably ignored by the backend rather than erroring.
+    publicApi.shokSandesh({
+      page, limit: 12, type: type || undefined, search: search || undefined,
+      city: city !== "all" ? city : undefined,
+    })
+      .then((r) => { setItems(r.data.items || []); setTotal(r.data.total || 0); })
+      .catch(() => {});
   };
 
-  useEffect(() => { loadItems(); }, [page, type]);
+  useEffect(() => { loadItems(); }, [page, type, city]);
 
-  const share = (item: any) => {
-    const text = `${isHindi ? "श्रद्धांजलि" : "Tribute"}: ${item.deceasedNameHindi || item.deceasedName}`;
-    if (navigator.share) {
-      navigator.share({ title: text, url: window.location.href }).catch(() => {});
-    } else {
-      const url = `https://wa.me/?text=${encodeURIComponent(text + " " + window.location.href)}`;
-      window.open(url, "_blank");
+  const filtered = useMemo(() => {
+    let list = [...items];
+    if (timeFilter !== "all") {
+      const now = Date.now();
+      const maxAgeMs = { today: 1, week: 7, month: 30 }[timeFilter]! * 24 * 60 * 60 * 1000;
+      list = list.filter((i) => i.createdAt && now - new Date(i.createdAt).getTime() <= maxAgeMs);
     }
-  };
+    if (ageFilter !== "all") {
+      list = list.filter((i) => {
+        if (i.deceasedAge == null) return false;
+        if (ageFilter === "60") return i.deceasedAge < 60;
+        if (ageFilter === "75") return i.deceasedAge >= 60 && i.deceasedAge <= 75;
+        return i.deceasedAge > 75;
+      });
+    }
+    if (nameSort === "name") {
+      list.sort((a, b) => (a.deceasedNameHindi || a.deceasedName || "").localeCompare(b.deceasedNameHindi || b.deceasedName || ""));
+    } else if (nameSort === "old") {
+      list.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+    }
+    return list;
+  }, [items, timeFilter, ageFilter, nameSort]);
+
+  const activeFilters: { key: string; label: string; clear: () => void }[] = [];
+  if (type) activeFilters.push({ key: "type", label: isHindi ? TYPES.find((t) => t.value === type)?.labelHi! : TYPES.find((t) => t.value === type)?.label!, clear: () => setType("") });
+  if (city !== "all") activeFilters.push({ key: "city", label: city, clear: () => setCity("all") });
+  if (timeFilter !== "all") activeFilters.push({ key: "time", label: timeFilter, clear: () => setTimeFilter("all") });
+  if (ageFilter !== "all") activeFilters.push({ key: "age", label: ageFilter, clear: () => setAgeFilter("all") });
+
+  const clearAll = () => { setType(""); setCity("all"); setTimeFilter("all"); setAgeFilter("all"); setSearch(""); setPage(1); };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="text-center mb-8">
-        <Heart size={32} className="text-gray-400 mx-auto mb-2" />
-        <h1 className="text-2xl font-bold">{isHindi ? "शोक संदेश / श्रद्धांजलि" : "Obituaries & Tributes"}</h1>
-        <p className="text-gray-500 mt-1 text-sm">{isHindi ? "अपनों को श्रद्धांजलि अर्पित करें" : "Pay tribute to your loved ones"}</p>
-        <Link href="/shok-sandesh/post" className="inline-flex items-center gap-1.5 bg-brand text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition mt-4">
-          <Plus size={16} /> {isHindi ? "शोक संदेश जमा करें" : "Submit an Obituary"}
-        </Link>
-      </div>
-
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {TYPES.map((t) => (
-          <button key={t.value} onClick={() => { setType(t.value); setPage(1); }}
-            className={`px-4 py-2 rounded-full text-sm transition ${type === t.value ? "bg-brand text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-            {isHindi ? t.labelHi : t.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex gap-2 max-w-md mx-auto mb-8">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && loadItems()}
-            placeholder={isHindi ? "नाम से खोजें..." : "Search by name..."} className="w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm" />
+    <div>
+      <div className="bg-panel border border-line rounded-lg overflow-hidden mb-3.5">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-line">
+          <span className="w-[42px] h-[42px] rounded-full bg-[#efede8] grid place-items-center text-[19px] shrink-0">🕯️</span>
+          <h2 className="font-serif text-xl leading-tight">{isHindi ? "शोक संदेश" : "Obituaries"}</h2>
+          <Link href="/shok-sandesh/post" className="ml-auto flex items-center gap-1.5 border border-brand text-brand rounded-md px-3.5 py-1.5 text-sm font-medium hover:bg-brand hover:text-white transition whitespace-nowrap">
+            <Plus size={15} /> {isHindi ? "सूचना प्रकाशित कराएँ" : "Submit an Obituary"}
+          </Link>
         </div>
-        <button onClick={loadItems} className="px-4 py-2.5 bg-brand text-white rounded-xl text-sm hover:opacity-90 transition">
-          {isHindi ? "खोजें" : "Search"}
-        </button>
-      </div>
 
-      <div className="space-y-4">
-        {items.map((item) => (
-          <div key={item.id} className="bg-white rounded-xl border p-6 hover:shadow-sm transition">
-            <div className="flex gap-5">
-              {item.deceasedPhoto && (
-                <img src={item.deceasedPhoto} alt={item.deceasedName}
-                  className="w-24 h-24 rounded-xl object-cover flex-shrink-0 border-2 border-gray-200" />
-              )}
-              <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded mb-2 inline-block">
-                      {TYPES.find((t) => t.value === item.type)?.[isHindi ? "labelHi" : "label"] || item.type}
-                    </span>
-                    <h3 className="text-xl font-bold text-gray-900">{isHindi ? (item.deceasedNameHindi || item.deceasedName) : item.deceasedName}</h3>
-                    {item.deceasedAge && <p className="text-sm text-gray-500">{isHindi ? `आयु: ${item.deceasedAge} वर्ष` : `Age: ${item.deceasedAge} years`}</p>}
-                  </div>
-                  <button onClick={() => share(item)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-                    <Share2 size={16} />
-                  </button>
-                </div>
-
-                {item.familyName && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    {isHindi ? "परिवार:" : "Family:"} {isHindi ? (item.familyNameHindi || item.familyName) : item.familyName}
-                  </p>
-                )}
-
-                {item.dateOfDeath && (
-                  <p className="flex items-center gap-1 text-sm text-gray-500 mt-1">
-                    <Calendar size={12} /> {format(new Date(item.dateOfDeath), "dd MMMM yyyy", { locale: isHindi ? hi : enIN })}
-                  </p>
-                )}
-
-                {(item.place || item.city) && (
-                  <p className="flex items-center gap-1 text-sm text-gray-500 mt-1">
-                    <MapPin size={12} /> {[item.place, item.city, item.state].filter(Boolean).join(", ")}
-                  </p>
-                )}
-
-                {item.message && (
-                  <p className="text-gray-700 mt-3 text-sm leading-relaxed border-l-2 border-gray-300 pl-3 italic">
-                    {isHindi ? (item.messageHindi || item.message) : item.message}
-                  </p>
-                )}
-
-                {item.eventDetails && (
-                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium text-gray-700">{isHindi ? "कार्यक्रम विवरण:" : "Event Details:"}</p>
-                    <p className="text-sm text-gray-600">{isHindi ? (item.eventDetailsHindi || item.eventDetails) : item.eventDetails}</p>
-                    {item.eventDate && <p className="text-xs text-gray-400 mt-1">{format(new Date(item.eventDate), "dd MMM yyyy", { locale: isHindi ? hi : enIN })} {item.eventPlace ? `· ${item.eventPlace}` : ""}</p>}
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="flex items-center gap-2.5 flex-wrap px-5 py-3">
+          <FilterPill label={isHindi ? "समय" : "Time"} />
+          <div className="flex border border-line rounded-md overflow-hidden">
+            {[["all", isHindi ? "सभी" : "All"], ["today", isHindi ? "आज" : "Today"], ["week", isHindi ? "इस हफ़्ते" : "This week"], ["month", isHindi ? "इस महीने" : "This month"]].map(([v, l], i) => (
+              <button key={v} onClick={() => setTimeFilter(v)} aria-pressed={timeFilter === v}
+                className={`text-[13.5px] px-3 py-1.5 whitespace-nowrap transition ${i > 0 ? "border-l border-line" : ""} ${timeFilter === v ? "bg-tx text-white" : "text-tx-3 hover:text-tx"}`}>
+                {l}
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
+          <span className="w-px h-5 bg-line mx-0.5" />
+          <FilterPill label={isHindi ? "शहर" : "City"} />
+          <select value={city} onChange={(e) => { setCity(e.target.value); setPage(1); }} className="text-[13.5px] border border-line rounded-md px-2.5 py-1.5 bg-panel text-tx outline-none min-w-[130px]">
+            <option value="all">{isHindi ? "सभी" : "All"}</option>
+            {states.map((s) => <option key={s.id} value={s.name}>{isHindi ? (s.nameHindi || s.name) : s.name}</option>)}
+          </select>
+          <FilterPill label={isHindi ? "आयु" : "Age"} />
+          <select value={ageFilter} onChange={(e) => setAgeFilter(e.target.value)} className="text-[13.5px] border border-line rounded-md px-2.5 py-1.5 bg-panel text-tx outline-none">
+            <option value="all">{isHindi ? "सभी" : "All"}</option>
+            <option value="60">{isHindi ? "60 से कम" : "Under 60"}</option>
+            <option value="75">60 – 75</option>
+            <option value="76">{isHindi ? "75 से ऊपर" : "Over 75"}</option>
+          </select>
+          <select value={nameSort} onChange={(e) => setNameSort(e.target.value)} className="text-[13.5px] border border-line rounded-md px-2.5 py-1.5 bg-panel text-tx outline-none">
+            <option value="new">{isHindi ? "नई पहले" : "Newest first"}</option>
+            <option value="old">{isHindi ? "पुरानी पहले" : "Oldest first"}</option>
+            <option value="name">{isHindi ? "नाम से (अ–ज्ञ)" : "By name"}</option>
+          </select>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && (setPage(1), loadItems())}
+            placeholder={isHindi ? "नाम से खोजें" : "Search by name"}
+            className="text-sm border border-line rounded-md px-3 py-1.5 bg-panel text-tx outline-none min-w-[160px] flex-1"
+          />
+          {activeFilters.length > 0 && (
+            <button onClick={clearAll} className="text-[13.5px] text-brand underline underline-offset-[3px]">{isHindi ? "फ़िल्टर हटाएँ" : "Clear filters"}</button>
+          )}
+          <span className="text-[13.5px] text-tx-3 whitespace-nowrap ml-auto">{filtered.length} {isHindi ? "प्रविष्टियाँ" : "entries"}</span>
+        </div>
 
-      {items.length === 0 && (
-        <p className="text-center text-gray-400 py-12">{isHindi ? "कोई प्रविष्टि नहीं मिली" : "No entries found"}</p>
-      )}
+        <div className="flex items-center gap-3 flex-wrap bg-brand-soft border-t border-[#f3ddcb] px-4 py-3.5 text-[#7a4a2c] text-sm">
+          <span>🕯️</span>
+          <span><b className="font-semibold">{isHindi ? "अख़बार में भी छपवाना है?" : "Want it printed in the newspaper too?"}</b> {isHindi ? "वेबसाइट पर प्रकाशन निःशुल्क है" : "Publishing on the website is free"}</span>
+          <button onClick={() => setPayTarget({})} className="ml-auto bg-brand text-white rounded-md px-4.5 py-2 text-sm font-medium hover:brightness-95 transition whitespace-nowrap">
+            {isHindi ? "पैकेज देखें" : "View Packages"}
+          </button>
+        </div>
+
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-5 pt-3">
+            {activeFilters.map((f) => (
+              <span key={f.key} className="flex items-center gap-1.5 text-[13.5px] bg-brand-soft text-[#8a3512] rounded-full px-2.5 py-1.5">
+                {f.label}
+                <button onClick={f.clear} aria-label="remove"><X size={13} /></button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+          {filtered.map((item) => (
+            <ShokSandeshCard key={item.id} item={item} />
+          ))}
+          {filtered.length === 0 && (
+            <p className="col-span-full text-center text-tx-3 py-12">{isHindi ? "कोई प्रविष्टि नहीं मिली" : "No entries found"}</p>
+          )}
+        </div>
+      </div>
 
       {Math.ceil(total / 12) > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-4 py-2 border rounded-lg disabled:opacity-40">{isHindi ? "पिछला" : "Previous"}</button>
-          <span className="text-sm text-gray-500">{page} / {Math.ceil(total / 12)}</span>
-          <button onClick={() => setPage(page + 1)} disabled={page >= Math.ceil(total / 12)} className="px-4 py-2 border rounded-lg disabled:opacity-40">{isHindi ? "अगला" : "Next"}</button>
+        <div className="flex items-center justify-center gap-2">
+          <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-4 py-2 border border-line rounded-md disabled:opacity-40 hover:border-tx transition">{isHindi ? "पिछला" : "Previous"}</button>
+          <span className="text-sm text-tx-3">{page} / {Math.ceil(total / 12)}</span>
+          <button onClick={() => setPage(page + 1)} disabled={page >= Math.ceil(total / 12)} className="px-4 py-2 border border-line rounded-md disabled:opacity-40 hover:border-tx transition">{isHindi ? "अगला" : "Next"}</button>
         </div>
       )}
+
+      <PlanPickerModal open={!!payTarget} onClose={() => setPayTarget(null)} context="shok" />
     </div>
   );
+}
+
+function FilterPill({ label }: { label: string }) {
+  return <span className="text-[13px] text-tx-3 shrink-0">{label}</span>;
 }

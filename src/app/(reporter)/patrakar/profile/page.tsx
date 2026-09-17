@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { ReporterGate } from "@/components/reporter/ReporterGate";
 import { useReporterAuth } from "@/lib/reporter-auth-context";
 import { reporterAuthApi } from "@/lib/reporter-api";
@@ -201,8 +202,7 @@ function ProfileForm() {
             aria-label="प्रोफ़ाइल फ़ोटो बदलें"
           >
             {reporter?.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={reporter.photoUrl} alt={reporter.name} className="w-20 h-20 rounded-full object-cover" />
+              <Image src={reporter.photoUrl} alt={reporter.name} fill sizes="80px" className="rounded-full object-cover" />
             ) : (
               <div className="w-20 h-20 bg-brand-tint rounded-full flex items-center justify-center text-2xl font-bold text-brand">
                 {reporter?.name?.[0]?.toUpperCase() || "P"}

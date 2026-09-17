@@ -26,11 +26,11 @@ export function LocalNewsBlock() {
   const cityDisplayName = isHindi ? (location.cityNameHindi || location.cityName) : location.cityName;
 
   return (
-    <section className="bg-white rounded-xl border p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-4 pb-2 border-b border-(--line)">
+    <section className="bg-panel border border-line rounded-lg p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-line">
         <div className="flex items-center gap-2.5">
           <MapPin size={18} className="text-brand" />
-          <h2 className="text-lg font-black text-gray-900">
+          <h2 className="font-serif text-xl">
             {isHindi ? `${cityDisplayName} की खबरें` : `News from ${cityDisplayName}`}
           </h2>
         </div>

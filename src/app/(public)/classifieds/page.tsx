@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import { Search, MapPin, Phone, MessageCircle, AlertTriangle, Star, Zap, Plus } from "lucide-react";
@@ -60,7 +61,7 @@ export default function ClassifiedsPage() {
       <div className="flex gap-3 mb-6 flex-wrap">
         {CATEGORIES.map((c) => (
           <button key={c.value} onClick={() => { setCategory(c.value); setPage(1); }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition ${category === c.value ? "bg-brand text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
+            className={`px-4 py-2 rounded-full text-sm font-medium transition ${category === c.value ? "bg-brand text-white" : "bg-panel-2 text-tx-2 hover:bg-panel-2"}`}>
             {isHindi ? c.labelHi : c.label}
           </button>
         ))}
@@ -68,7 +69,7 @@ export default function ClassifiedsPage() {
 
       <div className="flex gap-2 max-w-md mb-6">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-tx-3" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && loadAds()}
             placeholder={isHindi ? "विज्ञापन खोजें..." : "Search classifieds..."} className="w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm" />
         </div>
@@ -79,7 +80,7 @@ export default function ClassifiedsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {ads.map((ad) => (
-          <div key={ad.id} className="bg-white rounded-xl border hover:shadow-md transition p-4">
+          <div key={ad.id} className="bg-panel rounded-lg border-line border hover:shadow-md transition p-4">
             <div className="flex items-start justify-between mb-2">
               <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded capitalize">
                 {isHindi ? (CATEGORIES.find((c) => c.value === ad.category)?.labelHi || ad.category) : (CATEGORIES.find((c) => c.value === ad.category)?.label || ad.category)}
@@ -90,13 +91,15 @@ export default function ClassifiedsPage() {
               </div>
             </div>
             {ad.images?.length > 0 && (
-              <img src={ad.images[0]} alt={ad.title} className="w-full h-40 object-cover rounded-lg mb-3" />
+              <div className="relative w-full h-40 rounded-lg overflow-hidden mb-3 bg-panel-2">
+                <Image src={ad.images[0]} alt={ad.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+              </div>
             )}
-            <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{isHindi ? (ad.titleHindi || ad.title) : ad.title}</h3>
-            <p className="text-sm text-gray-500 line-clamp-2 mb-3">{isHindi ? (ad.descriptionHindi || ad.description) : ad.description}</p>
+            <h3 className="font-semibold text-tx mb-1 line-clamp-2">{isHindi ? (ad.titleHindi || ad.title) : ad.title}</h3>
+            <p className="text-sm text-tx-3 line-clamp-2 mb-3">{isHindi ? (ad.descriptionHindi || ad.description) : ad.description}</p>
             {ad.price && <p className="text-lg font-bold text-brand mb-2">{ad.price}</p>}
             {ad.city && (
-              <p className="flex items-center gap-1 text-xs text-gray-400 mb-3"><MapPin size={12} /> {ad.city}{ad.state ? `, ${ad.state}` : ""}</p>
+              <p className="flex items-center gap-1 text-xs text-tx-3 mb-3"><MapPin size={12} /> {ad.city}{ad.state ? `, ${ad.state}` : ""}</p>
             )}
             <div className="flex items-center justify-between border-t pt-3">
               <div className="flex gap-2">
@@ -111,21 +114,21 @@ export default function ClassifiedsPage() {
                   </a>
                 )}
               </div>
-              <button onClick={() => handleReport(ad.id)} className="text-gray-400 hover:text-red-500 p-1" title="Report">
+              <button onClick={() => handleReport(ad.id)} className="text-tx-3 hover:text-red-500 p-1" title="Report">
                 <AlertTriangle size={14} />
               </button>
             </div>
-            <p className="text-xs text-gray-300 mt-2">{format(new Date(ad.createdAt), "dd MMM yyyy", { locale: isHindi ? hi : enIN })}</p>
+            <p className="text-xs text-tx-3 mt-2">{format(new Date(ad.createdAt), "dd MMM yyyy", { locale: isHindi ? hi : enIN })}</p>
           </div>
         ))}
       </div>
 
-      {ads.length === 0 && <p className="text-center text-gray-400 py-12">{isHindi ? "कोई विज्ञापन नहीं मिला" : "No classifieds found"}</p>}
+      {ads.length === 0 && <p className="text-center text-tx-3 py-12">{isHindi ? "कोई विज्ञापन नहीं मिला" : "No classifieds found"}</p>}
 
       {Math.ceil(total / 12) > 1 && (
         <div className="flex items-center justify-center gap-2 mt-6">
           <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="px-4 py-2 border rounded-lg disabled:opacity-40">{isHindi ? "पिछला" : "Previous"}</button>
-          <span className="text-sm text-gray-500">{page} / {Math.ceil(total / 12)}</span>
+          <span className="text-sm text-tx-3">{page} / {Math.ceil(total / 12)}</span>
           <button onClick={() => setPage(page + 1)} disabled={page >= Math.ceil(total / 12)} className="px-4 py-2 border rounded-lg disabled:opacity-40">{isHindi ? "अगला" : "Next"}</button>
         </div>
       )}

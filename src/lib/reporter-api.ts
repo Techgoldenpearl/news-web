@@ -24,6 +24,8 @@ export const reporterAuthApi = {
 export const reporterSubmissionsApi = {
   list: (params?: Record<string, any>) => reporterApi.get("/submissions", { params }),
   create: (data: any) => reporterApi.post("/submissions", data),
+  update: (id: number, data: any) => reporterApi.put(`/submissions/${id}`, data),
+  delete: (id: number) => reporterApi.delete(`/submissions/${id}`),
 };
 
 export const reporterMiscApi = {

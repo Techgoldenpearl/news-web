@@ -27,7 +27,10 @@ export const publicApi = {
   article: (slug: string) => api.get(`/articles/${slug}`),
   categories: () => api.get("/categories"),
   category: (slug: string) => api.get(`/categories/${slug}`),
-  search: (q: string) => api.get("/features/search", { params: { q } }),
+  // limit:100 is the backend's max — search results are paginated client-side
+  // (see search/page.tsx), so without this the default limit:20 silently
+  // hides any match past the 20th with no indication more exist.
+  search: (q: string) => api.get("/features/search", { params: { q, limit: 100 } }),
   tags: () => api.get("/features/tags"),
 
   // Features
@@ -37,12 +40,16 @@ export const publicApi = {
   photoGalleries: (params?: Record<string, any>) => api.get("/features/photo-galleries", { params }),
   photoGallery: (slug: string) => api.get(`/features/photo-galleries/${slug}`),
   liveBlog: (articleId: number) => api.get(`/features/live-blogs/${articleId}`),
+  liveBlogsFeed: (limit = 6) => api.get("/features/live-blogs", { params: { limit } }),
   topics: (params?: Record<string, any>) => api.get("/features/topics", { params }),
   topic: (slug: string) => api.get(`/features/topics/${slug}`),
   states: () => api.get("/features/locations/states"),
-  stateArticles: (slug: string) => api.get(`/features/locations/states/${slug}/articles`),
+  // limit:100 is the backend's max — StateView paginates client-side over
+  // this full response, so the default limit:20 was silently truncating
+  // any state with more than 20 articles (e.g. Gujarat has 21).
+  stateArticles: (slug: string) => api.get(`/features/locations/states/${slug}/articles`, { params: { limit: 100 } }),
   cities: (stateSlug: string) => api.get(`/features/locations/states/${stateSlug}/cities`),
-  cityArticles: (stateSlug: string, citySlug: string) => api.get(`/features/locations/states/${stateSlug}/cities/${citySlug}/articles`),
+  cityArticles: (stateSlug: string, citySlug: string) => api.get(`/features/locations/states/${stateSlug}/cities/${citySlug}/articles`, { params: { limit: 100 } }),
   detectLocation: () => api.get("/features/locations/detect"),
   nearestLocation: (lat: number, lng: number) => api.get("/features/locations/nearest", { params: { lat, lng } }),
   vapidPublicKey: () => api.get("/features/push-vapid-key"),
@@ -52,6 +59,7 @@ export const publicApi = {
   comments: (articleId: number) => api.get(`/features/comments/${articleId}`),
   utilityData: () => api.get("/features/utility-data"),
   ad: (zone: string, device?: string) => api.get(`/ads/zone/${zone}`, { params: device ? { device } : undefined }),
+  adList: (zone: string, device?: string) => api.get(`/ads/zone/${zone}/list`, { params: device ? { device } : undefined }),
   adImpression: (adId: number, sessionId: string) => api.post("/ads/impression", { adId, sessionId }),
   adClick: (adId: number, sessionId: string) => api.post("/ads/click", { adId, sessionId }),
 

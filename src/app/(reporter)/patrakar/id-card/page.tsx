@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { ReporterGate } from "@/components/reporter/ReporterGate";
 import { reporterMiscApi } from "@/lib/reporter-api";
 import { format } from "date-fns";
@@ -26,9 +27,9 @@ function IdCardContent() {
           <p className="font-bold text-sm tracking-wide">PRESS / पत्रकार पहचान पत्र</p>
         </div>
         <div className="p-6 text-center">
-          <div className="w-24 h-24 rounded-full overflow-hidden bg-brand-tint border-2 border-brand/30 mx-auto mb-4 flex items-center justify-center">
+          <div className="relative w-24 h-24 rounded-full overflow-hidden bg-brand-tint border-2 border-brand/30 mx-auto mb-4 flex items-center justify-center">
             {card.photoUrl ? (
-              <img src={card.photoUrl} alt={card.name} className="w-full h-full object-cover" />
+              <Image src={card.photoUrl} alt={card.name} fill sizes="96px" className="object-cover" />
             ) : (
               <span className="text-3xl font-black text-brand">{(card.nameHindi || card.name)?.charAt(0)}</span>
             )}

@@ -13,11 +13,11 @@ interface ScrollCarouselProps {
 
 export function ScrollCarousel({ title, viewMoreHref, viewMoreLabel = "View More", children }: ScrollCarouselProps) {
   return (
-    <section className="bg-white rounded-xl border p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-4 pb-2 border-b border-(--line)">
+    <section className="bg-panel border border-line rounded-lg p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-line">
         <div className="flex items-center gap-2.5">
           <div className="w-1 h-6 rounded-full bg-brand" />
-          <h2 className="text-lg font-black text-gray-900">{title}</h2>
+          <h2 className="font-serif text-xl">{title}</h2>
         </div>
         {viewMoreHref && (
           <Link href={viewMoreHref} className="flex items-center gap-0.5 text-xs font-bold text-brand hover:opacity-80 transition uppercase tracking-wide">

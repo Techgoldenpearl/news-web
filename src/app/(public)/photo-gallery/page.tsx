@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import Image from "next/image";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import Link from "next/link";
@@ -25,7 +26,7 @@ export default function PhotoGalleryPage() {
                 <Link href={`/photo-gallery/${g.slug}`} className="group">
                   <div className="relative aspect-[3/2] rounded-xl overflow-hidden shadow-md bg-gray-100">
                     {g.thumbnailUrl ? (
-                      <img src={g.thumbnailUrl} alt={isHindi ? (g.titleHindi || g.title) : g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <Image src={g.thumbnailUrl} alt={isHindi ? (g.titleHindi || g.title) : g.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
                     )}

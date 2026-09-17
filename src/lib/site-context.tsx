@@ -2,21 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { api, publicApi } from "./api";
-
-interface Site {
-  id: number;
-  name: string;
-  slug: string;
-  language: string;
-  region?: string;
-  tagline?: string;
-  primaryColor?: string;
-  logoUrl?: string;
-  domain?: string;
-  subdomain?: string;
-  socialLinks?: { facebook?: string; twitter?: string; instagram?: string; youtube?: string; whatsapp?: string };
-  theme?: { primaryColor?: string; secondaryColor?: string; headerBg?: string };
-}
+import type { Site } from "@/types";
 
 interface SiteContextType {
   site: Site | null;
@@ -50,6 +36,11 @@ export function SiteProvider({ children }: { children: ReactNode }) {
         if (initial) {
           setSite(initial);
           api.defaults.headers.common["X-Site-ID"] = String(initial.id);
+          // Persist so the request interceptor (which reads localStorage,
+          // not this in-memory default) attaches X-Site-ID even for a
+          // request that fires before this effect finishes — e.g. a page
+          // whose own useEffect doesn't wait on useSite().loading.
+          localStorage.setItem("siteId", String(initial.id));
         }
       })
       .catch(() => {})

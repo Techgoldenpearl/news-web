@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import Link from "next/link";
@@ -58,10 +59,12 @@ export default function PhotoGalleryDetailPage() {
               onClick={() => setLightboxIndex(i)}
               className="group relative aspect-square rounded-xl overflow-hidden bg-gray-100 hover:opacity-90 transition"
             >
-              <img
+              <Image
                 src={img.imageUrl}
                 alt={img.caption || title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                fill
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
               {img.caption && (
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-end">

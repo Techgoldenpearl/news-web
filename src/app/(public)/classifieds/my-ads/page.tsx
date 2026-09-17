@@ -13,7 +13,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
   approved: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-700",
-  expired: "bg-gray-100 text-gray-500",
+  expired: "bg-panel-2 text-tx-3",
   paused: "bg-blue-100 text-blue-700",
 };
 
@@ -49,19 +49,19 @@ export default function MyClassifiedsPage() {
       </div>
 
       {loadingAds ? (
-        <div className="text-center py-12"><div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-brand mx-auto" /></div>
+        <div className="text-center py-12"><div className="animate-spin rounded-full h-6 w-6 border-2 border-line border-t-brand mx-auto" /></div>
       ) : ads.length === 0 ? (
-        <p className="text-center text-gray-400 py-12">{isHindi ? "अभी तक कोई विज्ञापन नहीं" : "No ads submitted yet"}</p>
+        <p className="text-center text-tx-3 py-12">{isHindi ? "अभी तक कोई विज्ञापन नहीं" : "No ads submitted yet"}</p>
       ) : (
         <div className="space-y-3">
           {ads.map((ad) => (
-            <div key={ad.id} className="bg-white rounded-xl border p-4">
+            <div key={ad.id} className="bg-panel rounded-lg border-line border p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-medium text-gray-900">{isHindi ? (ad.titleHindi || ad.title) : ad.title}</p>
-                  <p className="text-xs text-gray-400 mt-1">{ad.city || ad.state || ""} · {format(new Date(ad.createdAt), "dd MMM yyyy")}</p>
+                  <p className="font-medium text-tx">{isHindi ? (ad.titleHindi || ad.title) : ad.title}</p>
+                  <p className="text-xs text-tx-3 mt-1">{ad.city || ad.state || ""} · {format(new Date(ad.createdAt), "dd MMM yyyy")}</p>
                 </div>
-                <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${STATUS_COLORS[ad.status] || "bg-gray-100 text-gray-500"}`}>
+                <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${STATUS_COLORS[ad.status] || "bg-panel-2 text-tx-3"}`}>
                   {ad.status}
                 </span>
               </div>

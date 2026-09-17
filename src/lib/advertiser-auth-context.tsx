@@ -2,17 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { advertiserAuthApi } from "./advertiser-api";
-
-interface Advertiser {
-  id: number;
-  companyName: string;
-  contactName?: string;
-  email: string;
-  phone?: string;
-  gstNumber?: string;
-  website?: string;
-  status: "pending" | "active" | "suspended";
-}
+import type { Advertiser } from "@/types";
 
 interface AdvertiserAuthContextType {
   advertiser: Advertiser | null;
