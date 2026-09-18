@@ -51,6 +51,21 @@ export function EditSubmissionModal({ submission, onClose, onSaved, readOnly = f
     });
   }, [submission]);
 
+  useEffect(() => {
+    if (!submission) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submission]);
+
   if (!submission) return null;
 
   const save = async () => {

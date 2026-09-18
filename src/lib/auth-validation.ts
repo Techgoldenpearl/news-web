@@ -112,6 +112,31 @@ export function reporterRegisterSchema(lang: "hi" | "en") {
   });
 }
 
+export function classifiedPostSchema(lang: "hi" | "en") {
+  const m = portalMessages[lang];
+  const titleLabel = lang === "hi" ? "शीर्षक" : "Title";
+  const contactLabel = lang === "hi" ? "संपर्क नाम" : "Contact name";
+  const noContact = lang === "hi"
+    ? "फ़ोन या WhatsApp में से कम से कम एक आवश्यक है"
+    : "At least one of Phone or WhatsApp is required";
+  return z
+    .object({
+      category: z.string().min(1),
+      title: z.string().min(5, m.minLen(titleLabel, 5)).max(300),
+      titleHindi: z.string().max(300).optional(),
+      description: z.string().max(3000).optional(),
+      descriptionHindi: z.string().max(3000).optional(),
+      price: z.string().optional().refine((v) => !v || /^[0-9,.\s₹-]+$/.test(v) || /lakh|crore|onwards|month|day|lac/i.test(v), lang === "hi" ? "मान्य कीमत दर्ज करें" : "Enter a valid price"),
+      contactName: z.string().max(200).optional().refine((v) => !v || v.trim().length >= 2, m.minLen(contactLabel, 2)),
+      contactPhone: z.string().optional().refine((v) => !v || /^[0-9]{10}$/.test(v), m.phone),
+      contactWhatsapp: z.string().optional().refine((v) => !v || /^[0-9]{10,13}$/.test(v), lang === "hi" ? "मान्य WhatsApp नंबर दर्ज करें" : "Enter a valid WhatsApp number"),
+    })
+    .refine((data) => !!(data.contactPhone || data.contactWhatsapp), {
+      message: noContact,
+      path: ["contactPhone"],
+    });
+}
+
 export function advertiserRegisterSchema(lang: "hi" | "en") {
   const m = portalMessages[lang];
   const companyLabel = lang === "hi" ? "कंपनी का नाम" : "Company name";

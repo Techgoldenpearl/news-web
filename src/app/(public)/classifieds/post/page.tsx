@@ -7,6 +7,8 @@ import { publicApi, customerApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useSite } from "@/lib/site-context";
 import { toast } from "sonner";
+import { Upload, X } from "lucide-react";
+import { classifiedPostSchema, fieldErrorsFrom } from "@/lib/auth-validation";
 
 const CATEGORIES = [
   { value: "property", label: "Property", labelHi: "संपत्ति" },
@@ -24,7 +26,7 @@ const CATEGORIES = [
 const emptyForm = {
   category: "property", title: "", titleHindi: "", description: "", descriptionHindi: "",
   price: "", contactName: "", contactPhone: "", contactWhatsapp: "",
-  state: "", city: "", area: "", packageType: "basic",
+  state: "", city: "", area: "", packageType: "basic", images: [] as string[],
 };
 
 export default function PostClassifiedPage() {
@@ -36,6 +38,10 @@ export default function PostClassifiedPage() {
   const [cities, setCities] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const lang: "hi" | "en" = isHindi ? "hi" : "en";
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -55,10 +61,67 @@ export default function PostClassifiedPage() {
     }
   }, [form.state, states]);
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(",")[1]);
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+
+  const normalizeMimeType = (type: string) => (type === "image/jpg" ? "image/jpeg" : type);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error(isHindi
+        ? "असमर्थित फ़ाइल प्रकार। कृपया JPG, PNG, WebP या GIF अपलोड करें (HEIC समर्थित नहीं है)।"
+        : "Unsupported file type. Please upload JPG, PNG, WebP, or GIF (HEIC is not supported).");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error(isHindi ? "फ़ाइल बहुत बड़ी है (अधिकतम 8MB)" : "File too large (max 8MB)");
+      e.target.value = "";
+      return;
+    }
+    setUploadingPhoto(true);
+    try {
+      const base64 = await fileToBase64(file);
+      const res = await customerApi.uploadClassifiedPhoto(base64, file.name, normalizeMimeType(file.type));
+      setForm((prev) => ({ ...prev, images: [...prev.images, res.data.url] }));
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || (isHindi ? "अपलोड विफल" : "Upload failed"));
+    } finally {
+      setUploadingPhoto(false);
+      e.target.value = "";
+    }
+  };
+
+  const removePhoto = (url: string) => {
+    setForm((prev) => ({ ...prev, images: prev.images.filter((i) => i !== url) }));
+  };
+
+  const validate = (values: typeof form) => fieldErrorsFrom(classifiedPostSchema(lang).safeParse(values));
+
+  const handleBlur = (field: string) => {
+    setTouched((tt) => ({ ...tt, [field]: true }));
+    setFieldErrors(validate(form));
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.category) {
-      toast.error(isHindi ? "शीर्षक और श्रेणी आवश्यक है" : "Title and category are required");
+    const errors = validate(form);
+    setFieldErrors(errors);
+    setTouched({
+      title: true, price: true, contactName: true, contactPhone: true, contactWhatsapp: true,
+    });
+    if (Object.keys(errors).length > 0) {
+      toast.error(isHindi ? "कृपया फ़ॉर्म में त्रुटियां ठीक करें" : "Please fix the errors in the form");
       return;
     }
     setSubmitting(true);
@@ -95,13 +158,44 @@ export default function PostClassifiedPage() {
           <div>
             <label className="block text-sm font-medium mb-1">{isHindi ? "शीर्षक *" : "Title *"}</label>
             <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg" required />
+              onBlur={() => handleBlur("title")}
+              className={`w-full px-3 py-2 border rounded-lg ${touched.title && fieldErrors.title ? "border-red-400" : ""}`} required />
+            {touched.title && fieldErrors.title && <p className="text-red-500 text-xs mt-1">{fieldErrors.title}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">{isHindi ? "शीर्षक (हिंदी)" : "Title (Hindi)"}</label>
             <input value={form.titleHindi} onChange={(e) => setForm({ ...form, titleHindi: e.target.value })}
               className="w-full px-3 py-2 border rounded-lg" />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">{isHindi ? "फ़ोटो" : "Photos"}</label>
+          <div className="flex flex-wrap gap-3">
+            {form.images.map((url) => (
+              <div key={url} className="relative w-24 h-24">
+                <img src={url} alt="" className="w-24 h-24 rounded-lg object-cover border" />
+                <button type="button" onClick={() => removePhoto(url)}
+                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600">
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+            {form.images.length < 5 && (
+              uploadingPhoto ? (
+                <div className="flex flex-col items-center justify-center border-2 border-dashed border-blue-300 rounded-lg bg-blue-50 w-24 h-24">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-200 border-t-blue-600" />
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg w-24 h-24 cursor-pointer hover:border-brand hover:bg-brand/5 transition">
+                  <Upload size={18} className="text-gray-400 mb-1" />
+                  <span className="text-[10px] text-gray-500 text-center px-1">{isHindi ? "अपलोड करें" : "Upload"}</span>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handlePhotoUpload} className="hidden" />
+                </label>
+              )
+            )}
+          </div>
+          <p className="text-xs text-gray-400 mt-1">{isHindi ? "अधिकतम 5 फ़ोटो, प्रत्येक 8MB तक" : "Up to 5 photos, max 8MB each"}</p>
         </div>
 
         <div>
@@ -113,7 +207,9 @@ export default function PostClassifiedPage() {
         <div>
           <label className="block text-sm font-medium mb-1">{isHindi ? "कीमत" : "Price"}</label>
           <input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })}
-            className="w-full px-3 py-2 border rounded-lg" placeholder="₹" />
+            onBlur={() => handleBlur("price")}
+            className={`w-full px-3 py-2 border rounded-lg ${touched.price && fieldErrors.price ? "border-red-400" : ""}`} placeholder="₹" />
+          {touched.price && fieldErrors.price && <p className="text-red-500 text-xs mt-1">{fieldErrors.price}</p>}
         </div>
 
         <div className="grid grid-cols-3 gap-4">
@@ -144,19 +240,26 @@ export default function PostClassifiedPage() {
           <div>
             <label className="block text-sm font-medium mb-1">{isHindi ? "संपर्क नाम" : "Contact Name"}</label>
             <input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg" />
+              onBlur={() => handleBlur("contactName")}
+              className={`w-full px-3 py-2 border rounded-lg ${touched.contactName && fieldErrors.contactName ? "border-red-400" : ""}`} />
+            {touched.contactName && fieldErrors.contactName && <p className="text-red-500 text-xs mt-1">{fieldErrors.contactName}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">{isHindi ? "फ़ोन" : "Phone"}</label>
             <input value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg" placeholder="+91..." />
+              onBlur={() => handleBlur("contactPhone")}
+              className={`w-full px-3 py-2 border rounded-lg ${touched.contactPhone && fieldErrors.contactPhone ? "border-red-400" : ""}`} placeholder="10-digit number" />
+            {touched.contactPhone && fieldErrors.contactPhone && <p className="text-red-500 text-xs mt-1">{fieldErrors.contactPhone}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">WhatsApp</label>
             <input value={form.contactWhatsapp} onChange={(e) => setForm({ ...form, contactWhatsapp: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg" />
+              onBlur={() => handleBlur("contactWhatsapp")}
+              className={`w-full px-3 py-2 border rounded-lg ${touched.contactWhatsapp && fieldErrors.contactWhatsapp ? "border-red-400" : ""}`} />
+            {touched.contactWhatsapp && fieldErrors.contactWhatsapp && <p className="text-red-500 text-xs mt-1">{fieldErrors.contactWhatsapp}</p>}
           </div>
         </div>
+        <p className="text-xs text-gray-400 -mt-2">{isHindi ? "* फ़ोन या WhatsApp में से कम से कम एक आवश्यक है" : "* At least one of Phone or WhatsApp is required"}</p>
 
         {packages.length > 0 && (
           <div>

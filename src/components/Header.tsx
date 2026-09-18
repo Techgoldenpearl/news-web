@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Newspaper, Search, Flame, BookOpen } from "lucide-react";
+import { Home, Newspaper, Search, Flame, BookOpen, Tag } from "lucide-react";
 import { useSite } from "@/lib/site-context";
 import { useUI } from "@/lib/ui-context";
 import { PortalSwitcher } from "./header/PortalSwitcher";
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: "/latest", labelHi: "ताज़ा खबरें", labelEn: "Latest", icon: Newspaper },
   { href: "/shok-sandesh", labelHi: "शोक संदेश", labelEn: "Obituaries", icon: Flame },
   { href: "/epaper", labelHi: "ई-पेपर", labelEn: "E-Paper", icon: BookOpen },
+  { href: "/classifieds", labelHi: "क्लासिफाइड", labelEn: "Classifieds", icon: Tag },
 ];
 
 export function Header() {

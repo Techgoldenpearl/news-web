@@ -13,7 +13,10 @@ export function StockTicker() {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
-    publicApi.utilityData().then((r) => setItems(r.data)).catch(() => {});
+    const fetchData = () => publicApi.utilityData().then((r) => setItems(r.data)).catch(() => {});
+    fetchData();
+    const interval = setInterval(fetchData, 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   if (items.length === 0) return null;

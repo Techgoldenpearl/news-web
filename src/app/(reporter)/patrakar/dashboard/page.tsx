@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ReporterGate } from "@/components/reporter/ReporterGate";
 import { EditSubmissionModal } from "@/components/reporter/EditSubmissionModal";
 import { useReporterAuth } from "@/lib/reporter-auth-context";
@@ -62,7 +62,7 @@ function SubmissionRowSkeleton() {
 function DashboardContent() {
   const { reporter } = useReporterAuth();
   const [submissions, setSubmissions] = useState<any[]>([]);
-  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [submissionsLoading, setSubmissionsLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [categories, setCategories] = useState<any[]>([]);
 
@@ -76,10 +76,11 @@ function DashboardContent() {
   const [viewing, setViewing] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const filterKey = JSON.stringify({ search, status, categoryId, date, sort });
-  const submissionsLoading = loadedKey !== filterKey;
+  const requestIdRef = useRef(0);
 
   const loadSubmissions = () => {
+    const requestId = ++requestIdRef.current;
+    setSubmissionsLoading(true);
     reporterSubmissionsApi
       .list({
         status: status === "all" ? undefined : status,
@@ -88,9 +89,19 @@ function DashboardContent() {
         date: date || undefined,
         sort,
       })
-      .then((r) => setSubmissions(r.data.items))
-      .catch(() => setSubmissions([]))
-      .finally(() => setLoadedKey(filterKey));
+      .then((r) => {
+        if (requestId !== requestIdRef.current) return;
+        setSubmissions(r.data.items);
+      })
+      .catch(() => {
+        if (requestId !== requestIdRef.current) return;
+        setSubmissions([]);
+        toast.error("लेख लोड करने में समस्या हुई");
+      })
+      .finally(() => {
+        if (requestId !== requestIdRef.current) return;
+        setSubmissionsLoading(false);
+      });
   };
 
   const loadStats = () => {
@@ -158,8 +169,21 @@ function DashboardContent() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">खोजें (SEARCH)</label>
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="शीर्षक या कीवर्ड..."
-              className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-300 focus:border-brand" />
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="शीर्षक या कीवर्ड..."
+                className="w-full pl-8 pr-8 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-300 focus:border-brand" />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  aria-label="साफ़ करें"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-base leading-none"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">STATUS</label>
@@ -253,9 +277,19 @@ function DashboardContent() {
             <p className="text-gray-400 text-sm mb-4">
               {status === "all" && !search && !categoryId && !date ? "अपना पहला लेख जमा करके शुरुआत करें" : "फ़िल्टर बदलें या नया लेख जमा करें"}
             </p>
-            <Link href="/patrakar/submissions/new" className="inline-flex items-center gap-1.5 bg-brand text-white px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition">
-              <PenSquare size={15} /> नया लेख जमा करें
-            </Link>
+            <div className="flex items-center gap-2">
+              {(search || status !== "all" || categoryId || date) && (
+                <button
+                  onClick={() => { setSearch(""); setStatus("all"); setCategoryId(""); setDate(""); }}
+                  className="inline-flex items-center gap-1.5 border px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                >
+                  फ़िल्टर हटाएं
+                </button>
+              )}
+              <Link href="/patrakar/submissions/new" className="inline-flex items-center gap-1.5 bg-brand text-white px-4 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition">
+                <PenSquare size={15} /> नया लेख जमा करें
+              </Link>
+            </div>
           </div>
         )}
       </div>

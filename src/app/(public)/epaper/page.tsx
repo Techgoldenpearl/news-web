@@ -52,8 +52,8 @@ export default function EpaperPage() {
 
   return (
     <div>
-      <div className="bg-panel border border-line rounded-lg overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-line">
+      <div className="bg-panel border border-line rounded-lg overflow-visible">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-line rounded-t-lg">
           <span className="w-[42px] h-[42px] rounded-full bg-[#efede8] grid place-items-center text-[19px] shrink-0"><Newspaper size={19} /></span>
           <h2 className="font-serif text-xl leading-tight">{isHindi ? "आज का ई-पेपर" : "Today's E-Paper"}</h2>
           <div className="ml-auto"><EpaperCalendar edition="" selectedDate={selectedDate} /></div>

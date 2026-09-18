@@ -119,6 +119,8 @@ export const customerApi = {
   subscribe: (data: any) => api.post("/membership/subscribe", data),
   mySubscription: () => api.get("/membership/my-subscription"),
   cancelSubscription: () => api.post("/membership/cancel"),
+  uploadClassifiedPhoto: (base64: string, fileName: string, mimeType: string) =>
+    api.post("/classifieds/upload-photo", { base64, fileName, mimeType }),
   submitClassified: (data: any) => api.post("/classifieds/submit", data),
   myClassifieds: () => api.get("/classifieds/my-ads"),
   submitShokSandesh: (data: any) => api.post("/shok-sandesh/submit", data),

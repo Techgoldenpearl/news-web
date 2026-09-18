@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
-import { Search, MapPin, Phone, MessageCircle, AlertTriangle, Star, Zap, Plus } from "lucide-react";
+import { Search, MapPin, Phone, MessageCircle, AlertTriangle, Star, Zap, Plus, Images } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { hi, enIN } from "date-fns/locale";
@@ -90,13 +90,20 @@ export default function ClassifiedsPage() {
                 {ad.isUrgent && <Zap size={14} className="text-red-500" />}
               </div>
             </div>
-            {ad.images?.length > 0 && (
-              <div className="relative w-full h-40 rounded-lg overflow-hidden mb-3 bg-panel-2">
-                <Image src={ad.images[0]} alt={ad.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
-              </div>
-            )}
-            <h3 className="font-semibold text-tx mb-1 line-clamp-2">{isHindi ? (ad.titleHindi || ad.title) : ad.title}</h3>
-            <p className="text-sm text-tx-3 line-clamp-2 mb-3">{isHindi ? (ad.descriptionHindi || ad.description) : ad.description}</p>
+            <Link href={`/classifieds/${ad.id}`} className="block">
+              {ad.images?.length > 0 && (
+                <div className="relative w-full h-40 rounded-lg overflow-hidden mb-3 bg-panel-2">
+                  <Image src={ad.images[0]} alt={ad.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+                  {ad.images.length > 1 && (
+                    <span className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/65 text-white text-xs px-2 py-0.5 rounded-md">
+                      <Images size={12} /> {ad.images.length}
+                    </span>
+                  )}
+                </div>
+              )}
+              <h3 className="font-semibold text-tx mb-1 line-clamp-2 hover:text-brand transition">{isHindi ? (ad.titleHindi || ad.title) : ad.title}</h3>
+              <p className="text-sm text-tx-3 line-clamp-2 mb-3">{isHindi ? (ad.descriptionHindi || ad.description) : ad.description}</p>
+            </Link>
             {ad.price && <p className="text-lg font-bold text-brand mb-2">{ad.price}</p>}
             {ad.city && (
               <p className="flex items-center gap-1 text-xs text-tx-3 mb-3"><MapPin size={12} /> {ad.city}{ad.state ? `, ${ad.state}` : ""}</p>

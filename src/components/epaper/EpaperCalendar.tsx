@@ -81,7 +81,7 @@ export default function EpaperCalendar({ edition, selectedDate }: EpaperCalendar
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 bg-white border rounded-xl shadow-lg p-3 z-20 w-72">
+        <div className="absolute top-full right-0 mt-2 bg-white border rounded-xl shadow-lg p-3 z-50 w-72">
           <div className="flex items-center justify-between mb-2">
             <button onClick={() => setMonth((m) => subMonths(m, 1))} className="p-1 hover:bg-gray-100 rounded"><ChevronLeft size={16} /></button>
             <span className="text-sm font-medium">{format(month, "MMMM yyyy")}</span>
