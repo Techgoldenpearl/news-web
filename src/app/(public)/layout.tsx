@@ -13,25 +13,29 @@ import { BreakingBanner } from "@/components/BreakingBanner";
 import { StockTicker } from "@/components/StockTicker";
 import { LeaderboardAd, ResponsiveAd } from "@/components/AdUnit";
 
-const AD_FREE_PATHS = ["/about", "/contact", "/privacy", "/terms"];
+// Static/legal pages have no news content of their own, so news-only chrome
+// (stock ticker, breaking banner, category strip, Sidebar, RightRail, ads)
+// doesn't apply to them.
+const STATIC_PATHS = ["/about", "/contact", "/privacy", "/terms", "/editorial-guidelines", "/grievance-redressal"];
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const showAds = !AD_FREE_PATHS.includes(pathname);
+  const isStaticPage = STATIC_PATHS.includes(pathname);
+  const showAds = !isStaticPage;
 
   return (
     <UIProvider>
-      <StockTicker />
+      {!isStaticPage && <StockTicker />}
       <Header />
-      <BreakingBanner />
-      <MobileCategoryStrip />
-      <div className="shell-grid max-w-[1560px] mx-auto px-4 sm:px-[22px] pt-4 pb-10">
-        <Sidebar />
+      {!isStaticPage && <BreakingBanner />}
+      {!isStaticPage && <MobileCategoryStrip />}
+      <div className={`${isStaticPage ? "" : "shell-grid"} max-w-[1560px] mx-auto px-4 sm:px-[22px] pt-4 pb-10`}>
+        {!isStaticPage && <Sidebar />}
         <main className="min-w-0">
           {showAds && <LeaderboardAd className="mb-3.5" />}
           {children}
         </main>
-        <RightRail />
+        {!isStaticPage && <RightRail />}
       </div>
       {showAds && (
         <div className="max-w-[1560px] mx-auto px-4 sm:px-[22px]">

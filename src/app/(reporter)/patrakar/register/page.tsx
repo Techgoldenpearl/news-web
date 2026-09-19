@@ -28,6 +28,8 @@ const t = {
     doneIdLabel: "आपका Employee ID",
     doneMsg: "स्वीकृति के बाद आप लॉगिन कर सकेंगे।",
     doneBtn: "लॉगिन करें",
+    agreePre: "मैं", agreePrivacy: "गोपनीयता नीति", agreeMid: "और", agreeTerms: "उपयोग की शर्तों", agreePost: "से सहमत हूँ",
+    agreeRequired: "कृपया जारी रखने के लिए गोपनीयता नीति और उपयोग की शर्तों से सहमत हों",
   },
   en: {
     title: "Journalist Registration",
@@ -49,6 +51,8 @@ const t = {
     doneIdLabel: "Your Employee ID",
     doneMsg: "You can login after your application is approved.",
     doneBtn: "Go to Login",
+    agreePre: "I agree to the", agreePrivacy: "Privacy Policy", agreeMid: "and", agreeTerms: "Terms of Use", agreePost: "",
+    agreeRequired: "Please agree to the Privacy Policy and Terms of Use to continue",
   },
 };
 
@@ -69,6 +73,7 @@ export default function PatrakarRegisterPage() {
   const [lang, setLang] = useState<"hi" | "en">("hi");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const l = t[lang];
 
   const validate = (values: typeof form) =>
@@ -98,6 +103,7 @@ export default function PatrakarRegisterPage() {
     const errors = validate(form);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
+    if (!agreedToTerms) { setError(l.agreeRequired); return; }
 
     setLoading(true);
     try {
@@ -220,10 +226,23 @@ export default function PatrakarRegisterPage() {
 
           </div>
 
+          <label className="flex items-start gap-2 text-xs text-gray-500 mt-4 cursor-pointer">
+            <input type="checkbox" checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-brand" />
+            <span>
+              {l.agreePre}{" "}
+              <Link href="/privacy" target="_blank" onClick={(e) => e.stopPropagation()} className="text-brand font-semibold underline underline-offset-2">{l.agreePrivacy}</Link>
+              {" "}{l.agreeMid}{" "}
+              <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} className="text-brand font-semibold underline underline-offset-2">{l.agreeTerms}</Link>
+              {l.agreePost && ` ${l.agreePost}`}
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-brand text-white py-2.5 rounded-xl font-bold hover:opacity-90 disabled:opacity-50 transition text-sm mt-4"
+            disabled={loading || !agreedToTerms}
+            className="w-full bg-brand text-white py-2.5 rounded-xl font-bold hover:opacity-90 disabled:opacity-50 transition text-sm mt-3"
           >
             {loading ? l.submitting : l.submit}
           </button>

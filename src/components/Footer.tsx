@@ -151,8 +151,8 @@ export function Footer() {
         <div className="flex gap-4 flex-wrap">
           <Link href="/privacy" className="hover:text-tx transition">{isHindi ? "गोपनीयता नीति" : "Privacy Policy"}</Link>
           <Link href="/terms" className="hover:text-tx transition">{isHindi ? "उपयोग की शर्तें" : "Terms of Use"}</Link>
-          <Link href="/about" className="hover:text-tx transition">{isHindi ? "संपादकीय दिशानिर्देश" : "Editorial Guidelines"}</Link>
-          <Link href="/contact" className="hover:text-tx transition">{isHindi ? "शिकायत निवारण" : "Grievance Redressal"}</Link>
+          <Link href="/editorial-guidelines" className="hover:text-tx transition">{isHindi ? "संपादकीय दिशानिर्देश" : "Editorial Guidelines"}</Link>
+          <Link href="/grievance-redressal" className="hover:text-tx transition">{isHindi ? "शिकायत निवारण" : "Grievance Redressal"}</Link>
         </div>
         <div className="flex items-center gap-2 flex-wrap md:ml-auto">
           <Link href="/patrakar/login" className="border border-line rounded-md px-3 py-1.5 text-tx-3 hover:border-brand hover:text-brand transition">{isHindi ? "पत्रकार पोर्टल" : "Journalist Portal"}</Link>

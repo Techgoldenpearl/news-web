@@ -25,18 +25,19 @@ export function AuthModal({ open, onClose, initialMode = "login" }: AuthModalPro
   const [mode, setMode] = useState<Mode>(initialMode);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({ name: "", email: "", phone: "", password: "", confirmPassword: "" });
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const switchMode = (m: Mode) => { setMode(m); setError(""); setFieldErrors({}); };
+  const switchMode = (m: Mode) => { setMode(m); setError(""); setFieldErrors({}); setAgreedToTerms(false); };
 
   // AccountMenu keeps this modal mounted at all times (only `open` toggles),
   // so `initialMode` changing on a later click was never picked up after the
   // very first open — `useState(initialMode)` only reads it once. Re-sync
   // `mode` every time the modal is (re)opened.
   useEffect(() => {
-    if (open) { setMode(initialMode); setError(""); setFieldErrors({}); }
+    if (open) { setMode(initialMode); setError(""); setFieldErrors({}); setAgreedToTerms(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialMode]);
 
@@ -63,6 +64,10 @@ export function AuthModal({ open, onClose, initialMode = "login" }: AuthModalPro
     const errors = fieldErrorsFrom(result);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
+    if (!agreedToTerms) {
+      setError(isHindi ? "कृपया जारी रखने के लिए गोपनीयता नीति और उपयोग की शर्तों से सहमत हों" : "Please agree to the Privacy Policy and Terms of Use to continue");
+      return;
+    }
     setLoading(true);
     try {
       const { confirmPassword, ...payload } = signupForm;
@@ -133,7 +138,19 @@ export function AuthModal({ open, onClose, initialMode = "login" }: AuthModalPro
               className={fieldClass("confirmPassword")} />
             {fieldErrors.confirmPassword && <p className="text-red-500 text-xs mt-1">{fieldErrors.confirmPassword}</p>}
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-brand text-white py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition">
+          <label className="flex items-start gap-2.5 text-sm text-tx-2 cursor-pointer">
+            <input type="checkbox" checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-line accent-brand" />
+            <span>
+              {isHindi ? (
+                <>मैं <Link href="/privacy" target="_blank" onClick={(e) => e.stopPropagation()} className="text-brand font-medium underline underline-offset-2">गोपनीयता नीति</Link> और <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} className="text-brand font-medium underline underline-offset-2">उपयोग की शर्तों</Link> से सहमत हूँ</>
+              ) : (
+                <>I agree to the <Link href="/privacy" target="_blank" onClick={(e) => e.stopPropagation()} className="text-brand font-medium underline underline-offset-2">Privacy Policy</Link> and <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} className="text-brand font-medium underline underline-offset-2">Terms of Use</Link></>
+              )}
+            </span>
+          </label>
+          <button type="submit" disabled={loading || !agreedToTerms} className="w-full bg-brand text-white py-3 rounded-xl font-medium hover:opacity-90 disabled:opacity-50 transition">
             {loading ? (isHindi ? "बन रहा है…" : "Creating…") : (isHindi ? "खाता बनाएँ" : "Create Account")}
           </button>
         </form>

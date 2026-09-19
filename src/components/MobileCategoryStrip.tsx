@@ -3,11 +3,21 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Flame } from "lucide-react";
+import { Flame, Newspaper, BookOpen, Tag } from "lucide-react";
 import { publicApi } from "@/lib/api";
 import { useSite } from "@/lib/site-context";
 import { dedupeCategories } from "@/lib/categories";
 import type { Category } from "@/types";
+
+// Site sections that only otherwise live in the desktop header nav
+// (Header.tsx hides that nav below lg) — folded into this strip so mobile
+// doesn't need a second row to reach them.
+const QUICK_LINKS = [
+  { href: "/latest", labelHi: "ताज़ा खबरें", labelEn: "Latest", icon: Newspaper },
+  { href: "/shok-sandesh", labelHi: "शोक संदेश", labelEn: "Obituaries", icon: Flame },
+  { href: "/epaper", labelHi: "ई-पेपर", labelEn: "E-Paper", icon: BookOpen },
+  { href: "/classifieds", labelHi: "क्लासिफाइड", labelEn: "Classifieds", icon: Tag },
+];
 
 /** Horizontally-scrollable category strip under the mobile header — the
  * fast category-switching path that the (now-removed) hamburger sidebar
@@ -35,6 +45,22 @@ export function MobileCategoryStrip() {
         >
           <Flame size={13} /> {isHindi ? "टॉप न्यूज़" : "Top News"}
         </Link>
+        {QUICK_LINKS.map((link) => {
+          const active = pathname === link.href;
+          const Icon = link.icon;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13.5px] font-semibold whitespace-nowrap transition ${
+                active ? "bg-brand text-white" : "text-tx-2 bg-panel-2"
+              }`}
+            >
+              <Icon size={13} /> {isHindi ? link.labelHi : link.labelEn}
+            </Link>
+          );
+        })}
+        <span className="shrink-0 w-px h-5 bg-line mx-0.5" />
         {categories.map((c) => {
           const href = `/category/${c.slug}`;
           const active = pathname === href;

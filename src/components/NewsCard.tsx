@@ -42,8 +42,8 @@ export function NewsCard({ id, title, titleHindi, slug, summary, summaryHindi, t
       <Link href={`/article/${slug}`} className="outline-none focus-visible:ring-2 focus-visible:ring-brand/40 flex-1 flex flex-col">
         {isBreaking && (
           <div className={`flex flex-col ${size === "lg" ? "p-4 pb-0" : "p-3 pb-0"}`}>
-            <h3 className={`flex items-start gap-2 font-sans font-bold text-tx transition-colors line-clamp-2 ${size === "lg" ? "text-2xl leading-snug" : size === "sm" ? "text-base leading-snug" : "text-lg leading-snug"}`}>
-              <span className="bg-live text-white text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wide shrink-0 mt-1.5">
+            <h3 className={`font-sans font-bold text-tx transition-colors line-clamp-2 ${size === "lg" ? "text-2xl leading-snug" : size === "sm" ? "text-base leading-snug" : "text-lg leading-snug"}`}>
+              <span className="inline-block bg-live text-white text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wide align-middle mr-2 mb-0.5">
                 {isHindi ? "लाइव" : "LIVE"}
               </span>
               {displayTitle}

@@ -42,6 +42,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="hi" className={`${inter.variable} ${devanagari.variable} ${serifHindi.variable} ${mukta.variable}`}>
       <head>
         <meta name="theme-color" content={themeColor} />
+        {/* Suppresses Chrome's own auto-translate infobar, which otherwise
+            pops up alongside our custom LanguageSwitcher/TranslateElement
+            widget and duplicates it. Only affects the browser's native
+            heuristic, not the widget triggered via goog-te-combo below. */}
+        <meta name="google" content="notranslate" />
         {site?.logoUrl && <link rel="apple-touch-icon" href={site.logoUrl} />}
         <script
           dangerouslySetInnerHTML={{

@@ -117,11 +117,34 @@ function FilterGroup<T extends string>({ value, onChange, options }: { value: T;
   );
 }
 
+const MAX_VISIBLE_PAGES = 5;
+
+/** Windowed page list around the current page, e.g. [1, "…", 4, 5, 6, "…", 16].
+ * Keeps the pager usable on narrow screens instead of listing every page. */
+function pageWindow(page: number, totalPages: number): (number | "…")[] {
+  if (totalPages <= MAX_VISIBLE_PAGES + 2) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  const half = Math.floor(MAX_VISIBLE_PAGES / 2);
+  let start = Math.max(2, page - half);
+  let end = Math.min(totalPages - 1, page + half);
+  if (page - half <= 2) end = MAX_VISIBLE_PAGES;
+  if (page + half >= totalPages - 1) start = totalPages - MAX_VISIBLE_PAGES + 1;
+
+  const middle = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  const result: (number | "…")[] = [1];
+  if (start > 2) result.push("…");
+  result.push(...middle);
+  if (end < totalPages - 1) result.push("…");
+  result.push(totalPages);
+  return result;
+}
+
 function Pager({ page, totalPages, hasMore, onChange }: { page: number; totalPages?: number; hasMore?: boolean; onChange: (p: number) => void }) {
-  const pages = totalPages ? Array.from({ length: totalPages }, (_, i) => i + 1) : null;
+  const pages = totalPages ? pageWindow(page, totalPages) : null;
 
   return (
-    <div className="flex gap-1.5 justify-center pt-5">
+    <div className="flex gap-1.5 justify-center flex-wrap pt-5">
       <button
         disabled={page <= 1}
         onClick={() => onChange(page - 1)}
@@ -130,21 +153,25 @@ function Pager({ page, totalPages, hasMore, onChange }: { page: number; totalPag
         <ChevronLeft size={16} className="mx-auto" />
       </button>
       {pages ? (
-        pages.map((p) => (
-          <button
-            key={p}
-            onClick={() => onChange(p)}
-            aria-current={p === page ? "page" : undefined}
-            className={`min-w-[38px] h-[38px] border rounded-md px-2.5 text-[14.5px] transition ${p === page ? "bg-tx text-white border-tx" : "bg-panel text-tx-2 border-line hover:border-tx hover:text-tx"}`}
-          >
-            {p}
-          </button>
-        ))
+        pages.map((p, i) =>
+          p === "…" ? (
+            <span key={`ellipsis-${i}`} className="min-w-[38px] h-[38px] grid place-items-center text-[14.5px] text-tx-3">…</span>
+          ) : (
+            <button
+              key={p}
+              onClick={() => onChange(p)}
+              aria-current={p === page ? "page" : undefined}
+              className={`min-w-[38px] h-[38px] border rounded-md px-2.5 text-[14.5px] transition ${p === page ? "bg-tx text-white border-tx" : "bg-panel text-tx-2 border-line hover:border-tx hover:text-tx"}`}
+            >
+              {p}
+            </button>
+          )
+        )
       ) : (
         <span className="min-w-[38px] h-[38px] grid place-items-center text-[14.5px] text-tx-2">{page}</span>
       )}
       <button
-        disabled={pages ? page >= pages.length : !hasMore}
+        disabled={totalPages ? page >= totalPages : !hasMore}
         onClick={() => onChange(page + 1)}
         className="min-w-[38px] h-[38px] border border-line rounded-md bg-panel text-tx-2 px-2.5 disabled:opacity-40 hover:border-tx hover:text-tx transition"
       >
